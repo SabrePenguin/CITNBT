@@ -1,5 +1,7 @@
 package com.sabrepotato.citnbt.config;
 
+import com.sabrepotato.citnbt.resources.NBTCondition;
+import com.sabrepotato.citnbt.resources.NBTRule;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -9,34 +11,18 @@ import java.util.List;
 import java.util.Objects;
 
 public class NBTHolder {
-    public final ModelResourceLocation itemId;
-    public final List<NBTCondition> rules;
     public final ResourceLocation texture;
+    private final NBTRule rule;
 
-    public NBTHolder(ModelResourceLocation itemId, List<NBTCondition> rules, ResourceLocation texture) {
-        this.itemId = itemId;
-        this.rules = rules;
+    public NBTHolder(ResourceLocation texture, NBTRule rule) {
         this.texture = texture;
+        this.rule = rule;
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (!(obj instanceof NBTHolder other)) return false;
-        return Objects.equals(rules, other.rules)
-                && Objects.equals(itemId, other.itemId)
-                && Objects.equals(texture, other.texture);
+    public NBTRule getRule() {
+        return rule;
     }
-
-    public boolean matches(ItemStack stack) {
-        NBTTagCompound compound = stack.getTagCompound();
-        for(NBTCondition condition: rules) {
-            if (!condition.matches(compound)) return false;
-        }
-        return true;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(itemId, rules, texture);
+    public ResourceLocation getTexture() {
+        return texture;
     }
 }

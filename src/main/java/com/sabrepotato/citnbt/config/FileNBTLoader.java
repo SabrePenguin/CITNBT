@@ -1,6 +1,8 @@
 package com.sabrepotato.citnbt.config;
 
 import com.sabrepotato.citnbt.CITNBT;
+import com.sabrepotato.citnbt.resources.NBTCondition;
+import com.sabrepotato.citnbt.resources.NBTRule;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.util.ResourceLocation;
@@ -13,9 +15,9 @@ import java.util.List;
 import java.util.Properties;
 import java.util.stream.Stream;
 
-public class NBTLoader {
+public class FileNBTLoader {
 
-    public static List<NBTHolder> RULES = new ArrayList<>();
+    public static List<NBTHolder> CONFIG_RULES = new ArrayList<>();
 
     public static void loadFiles() {
         File resourceDir = new File(Minecraft.getMinecraft().gameDir, "resources");
@@ -52,8 +54,8 @@ public class NBTLoader {
                                         }
                                     }
                                 }
-                                RULES.add(new NBTHolder(matchLoc, rules, textureLoc));
-                                CITNBT.LOGGER.info("Added rule");
+                                NBTRule rule = new NBTRule(rules, matchLoc);
+                                CONFIG_RULES.add(new NBTHolder(textureLoc, rule));
                             } catch (IOException e) {
                                 CITNBT.LOGGER.error("Unable to read file {}", path);
                             }

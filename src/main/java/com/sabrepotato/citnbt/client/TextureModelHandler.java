@@ -2,8 +2,9 @@ package com.sabrepotato.citnbt.client;
 
 import com.google.common.collect.ImmutableMap;
 import com.sabrepotato.citnbt.CITNBT;
-import com.sabrepotato.citnbt.config.NBTLoader;
+import com.sabrepotato.citnbt.config.FileNBTLoader;
 import com.sabrepotato.citnbt.config.NBTHolder;
+import com.sabrepotato.citnbt.resources.NBTRule;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
@@ -26,11 +27,12 @@ import java.util.Map;
 @Mod.EventBusSubscriber
 public class TextureModelHandler {
 
-    public static final Map<NBTHolder, IBakedModel> BAKED_MODELS = new HashMap<>();
+    public static final Map<NBTRule, IBakedModel> BAKED_MODELS = new HashMap<>();
+    private static final Map<ModelResourceLocation, List<NBTRule>> RULES_BY_MODEL = new HashMap<>();
     @SubscribeEvent
     public static void onTextureStitch(TextureStitchEvent.Pre event) {
-        for(NBTHolder rule : NBTLoader.RULES) {
-            CITNBT.LOGGER.info("Loading rule: {} for {}", rule.texture, rule.itemId);
+        for(NBTHolder rule : FileNBTLoader.CONFIG_RULES) {
+            CITNBT.LOGGER.info("Loading rule: {} for {}", rule.texture, rule.getRule().getLocation());
             event.getMap().registerSprite(rule.texture);
         }
     }
@@ -38,34 +40,41 @@ public class TextureModelHandler {
 
     @SubscribeEvent
     public static void onModelBake(ModelBakeEvent event) {
-        Map<ModelResourceLocation, List<NBTHolder>> rulesByModel = new HashMap<>();
-        for(NBTHolder rule : NBTLoader.RULES) {
-            rulesByModel.computeIfAbsent(rule.itemId, k -> new ArrayList<>()).add(rule);
+        BAKED_MODELS.clear();
+        RULES_BY_MODEL.clear();
+        for (NBTHolder holder : FileNBTLoader.CONFIG_RULES) {
+            try {
+                NBTRule rule = holder.getRule();
+                ModelResourceLocation targetModel = rule.getLocation();
+
+                IModel model;
+                if (holder.getTexture() != null) {
+                    model = ModelLoaderRegistry.getModel(targetModel).retexture(
+                            ImmutableMap.of("layer0", holder.getTexture().toString()));
+                } else {
+                    model = ModelLoaderRegistry.getModel(targetModel);
+                }
+                IBakedModel bakedModel = model.bake(model.getDefaultState(), DefaultVertexFormats.ITEM,
+                        location -> Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(location.toString()));
+
+                BAKED_MODELS.put(rule, bakedModel);
+                RULES_BY_MODEL.computeIfAbsent(targetModel, k -> new ArrayList<>()).add(rule);
+            } catch (Exception e) {
+                CITNBT.LOGGER.error("Error baking model for rule: {}", holder.getRule());
+            }
         }
 
-        for (Map.Entry<ModelResourceLocation, List<NBTHolder>> entry : rulesByModel.entrySet()) {
+        for (Map.Entry<ModelResourceLocation, List<NBTRule>> entry : RULES_BY_MODEL.entrySet()) {
             ModelResourceLocation modelLoc = entry.getKey();
+            List<NBTRule> rules = entry.getValue();
+
             IBakedModel original = event.getModelRegistry().getObject(modelLoc);
-            if (original == null) {
+            if (original != null) {
+                IBakedModel wrapped = new DynamicBakedModel(original, rules);
+                event.getModelRegistry().putObject(modelLoc, wrapped);
+            } else {
                 CITNBT.LOGGER.error("Invalid target: {}", modelLoc);
-                continue;
             }
-
-            for (NBTHolder rule : entry.getValue()) {
-                try {
-                    IModel model;
-                    model = ModelLoaderRegistry.getModel(rule.itemId);
-                    model = model.retexture(ImmutableMap.of("layer0", rule.texture.toString()));
-
-                    IBakedModel baked = model.bake(model.getDefaultState(), DefaultVertexFormats.ITEM,
-                            location -> Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(location.toString()));
-                    BAKED_MODELS.put(rule, baked);
-                } catch (Exception e) {
-                    CITNBT.LOGGER.error("Error baking model for rule: {}", rule);
-                }
-            }
-            event.getModelRegistry().putObject(modelLoc,
-                    new DynamicBakedModel(original, entry.getValue()));
         }
     }
 }

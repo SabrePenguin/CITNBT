@@ -1,4 +1,4 @@
-package com.sabrepotato.citnbt.config;
+package com.sabrepotato.citnbt.resources;
 
 import net.minecraft.nbt.*;
 

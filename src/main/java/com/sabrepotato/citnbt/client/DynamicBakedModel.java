@@ -1,6 +1,7 @@
 package com.sabrepotato.citnbt.client;
 
 import com.sabrepotato.citnbt.config.NBTHolder;
+import com.sabrepotato.citnbt.resources.NBTRule;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.IBakedModel;
@@ -19,9 +20,9 @@ import java.util.*;
 
 public class DynamicBakedModel implements IBakedModel {
     private final IBakedModel defaultModel;
-    private final List<NBTHolder> rules;
+    private final List<NBTRule> rules;
 
-    public DynamicBakedModel(IBakedModel defaultModel, List<NBTHolder> rules) {
+    public DynamicBakedModel(IBakedModel defaultModel, List<NBTRule> rules) {
         this.defaultModel = defaultModel;
         this.rules = rules;
     }
@@ -62,7 +63,7 @@ public class DynamicBakedModel implements IBakedModel {
         return new ItemOverrideList(Collections.emptyList()) {
             @Override
             public IBakedModel handleItemState(IBakedModel originalModel, ItemStack stack, @Nullable World world, @Nullable EntityLivingBase entity) {
-                for (NBTHolder rule : rules) {
+                for (NBTRule rule : rules) {
                     if (rule.matches(stack)) {
                         IBakedModel bake = TextureModelHandler.BAKED_MODELS.get(rule);
                         if (bake != null) return bake;
