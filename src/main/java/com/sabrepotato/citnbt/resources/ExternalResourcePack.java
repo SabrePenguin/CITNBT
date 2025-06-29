@@ -38,7 +38,7 @@ public class ExternalResourcePack {
         Minecraft mc = Minecraft.getMinecraft();
         try {
             List<IResourcePack> defaultPacks = ObfuscationReflectionHelper.getPrivateValue(
-                    Minecraft.class, mc, "defaultResourcePacks"
+                    Minecraft.class, mc, "defaultResourcePacks", "field_110449_ao"
             );
 
             if (!defaultPacks.contains(flatPack)) {
