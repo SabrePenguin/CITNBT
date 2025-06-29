@@ -2,7 +2,7 @@ package com.sabrepotato.citnbt.proxy;
 
 import com.sabrepotato.citnbt.CITNBT;
 import com.sabrepotato.citnbt.resources.ExternalResourcePack;
-import com.sabrepotato.citnbt.config.ITNBT;
+import com.sabrepotato.citnbt.config.NBTLoader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.FallbackResourceManager;
@@ -20,7 +20,7 @@ public class ClientProxy extends CommonProxy {
         super.preInit(event);
         ExternalResourcePack.ensurePackMcmetaExists();
         ExternalResourcePack.injectExternalResources();
-        ITNBT.loadFiles();
+        NBTLoader.loadFiles();
     }
 
     @Override
