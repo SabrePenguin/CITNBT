@@ -15,8 +15,8 @@ public class CITNBT {
 
     @SidedProxy(
             modId = Tags.MODID,
-            clientSide = "com.sabrepotato.itnbt.proxy.ClientProxy",
-            serverSide = "com.sabrepotato.itnbt.proxy.CommonProxy"
+            clientSide = "com.sabrepotato.citnbt.proxy.ClientProxy",
+            serverSide = "com.sabrepotato.citnbt.proxy.CommonProxy"
     )
     public static CommonProxy proxy;
 
