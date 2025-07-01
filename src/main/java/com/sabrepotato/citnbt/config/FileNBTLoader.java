@@ -50,8 +50,14 @@ public class FileNBTLoader {
                                         if (val.startsWith("contains:")) {
                                             // TODO: Insert ot Rule
                                             rules.add(new NBTCondition(nbtPath, NBTCondition.Type.CONTAINS, val.substring(9)));
-                                        } else if (val.equals("exists")) {
-                                            rules.add(new NBTCondition(nbtPath, NBTCondition.Type.EXISTS, "exists"));
+                                        } else if (val.startsWith("exists:")) {
+                                            String bool = val.substring(7);
+                                            if (bool.equalsIgnoreCase("true") || bool.equalsIgnoreCase("false")) {
+                                                rules.add(new NBTCondition(nbtPath, NBTCondition.Type.EXISTS, val.substring(7)));
+                                            } else {
+                                                CITNBT.LOGGER.warn("Unable to apply exists rule to {} on path {}: " +
+                                                        "Invalid value: {}", itemLocs, nbtPath, bool);
+                                            }
                                         } else {
                                             rules.add(new NBTCondition(nbtPath, NBTCondition.Type.EQUALS, val));
                                         }

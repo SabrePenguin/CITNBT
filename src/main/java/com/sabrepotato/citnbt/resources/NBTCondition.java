@@ -13,15 +13,17 @@ public class NBTCondition {
     private final String nbtPath;
     private final Type type;
     private final String expectedValue;
+    private final boolean shouldTagExist;
 
     public NBTCondition(String nbtPath, Type type, String expectedValue) {
         this.nbtPath = nbtPath;
         this.type = type;
         this.expectedValue = expectedValue;
+        this.shouldTagExist = expectedValue.equalsIgnoreCase("true");
     }
 
     public boolean matches(NBTTagCompound compound) {
-        if (compound == null) return false;
+        if (compound == null) return type == Type.EXISTS && !this.shouldTagExist;
         NBTBase current = compound;
         for (String key : nbtPath.split("\\.")) {
             if (!(current instanceof NBTTagCompound)) {
@@ -29,12 +31,12 @@ public class NBTCondition {
             }
             current = ((NBTTagCompound) current).getTag(key);
             if (current == null) {
-                return false;
+                return type == Type.EXISTS && !this.shouldTagExist;
             }
         }
 
         if (type == Type.EXISTS) {
-            return true;
+            return this.shouldTagExist;
         }
 
         String actual = getValueAsString(current);

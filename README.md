@@ -24,13 +24,16 @@ texture=cit:items/stick_glow
 
 **Note:** `texture` does NOT need to be in the same namespace as the item.
 
+## Behavior
+
+- The NBT condition `exists` must be either `true` or `false`
 
 ## Current Features
 
 - NBT conditions
   - Matches: `nbt.tag.path=matches:ExactNBTMatch`
   - Contains: `nbt.tag.path=contains:TextToContain`
-  - Exists: `nbt.tag.path=exists`
+  - Exists: `nbt.tag.path=exists:true`
 - Basic model support (not fully tested)
 - mcmeta animation support
 - Hot reload
@@ -39,6 +42,5 @@ texture=cit:items/stick_glow
 ## Possible future features
 
 - Regular Resourcepack Support
-- Exists true or false to allow more conditions
 - More Optifine conditions
 - Proper config (enable/disable hot-reload, set primary assets folder)
