@@ -67,4 +67,8 @@ public class FileNBTLoader {
             }
         }
     }
+
+    public static void clearRules() {
+        CONFIG_RULES.clear();
+    }
 }

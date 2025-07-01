@@ -14,6 +14,7 @@ import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.client.model.IModel;
 import net.minecraftforge.client.model.ModelLoaderRegistry;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -29,10 +30,11 @@ public class TextureModelHandler {
 
     public static final Map<NBTRule, IBakedModel> BAKED_MODELS = new HashMap<>();
     private static final Map<ModelResourceLocation, List<NBTRule>> RULES_BY_MODEL = new HashMap<>();
-    @SubscribeEvent
+    @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onTextureStitch(TextureStitchEvent.Pre event) {
+        FileNBTLoader.loadFiles();
         for(NBTHolder rule : FileNBTLoader.CONFIG_RULES) {
-            CITNBT.LOGGER.info("Loading rule: {} for {}", rule.texture, rule.getRule().getLocation());
+//            CITNBT.LOGGER.info("Loading rule: {} for {}", rule.texture, rule.getRule().getLocation());
             event.getMap().registerSprite(rule.texture);
         }
     }
@@ -40,6 +42,8 @@ public class TextureModelHandler {
 
     @SubscribeEvent
     public static void onModelBake(ModelBakeEvent event) {
+        FileNBTLoader.clearRules();
+        FileNBTLoader.loadFiles();
         BAKED_MODELS.clear();
         RULES_BY_MODEL.clear();
         for (NBTHolder holder : FileNBTLoader.CONFIG_RULES) {
