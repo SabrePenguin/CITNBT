@@ -22,7 +22,7 @@ nbt.display.Name=contains:Glow
 texture=cit:items/stick_glow
 ```
 
-**Note:** `texture` does NOT need to be in the same namespace.
+**Note:** `texture` does NOT need to be in the same namespace as the item.
 
 
 ## Current Features
