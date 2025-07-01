@@ -34,10 +34,12 @@ public class FileNBTLoader {
 
                                 String match = props.getProperty("match");
                                 String texture = props.getProperty("texture");
+                                String model = props.getProperty("model");
                                 if (match == null || texture == null) return;
 
                                 ModelResourceLocation matchLoc = new ModelResourceLocation(match, "inventory");
                                 ResourceLocation textureLoc = new ResourceLocation(texture);
+                                ResourceLocation modelLoc = (model != null) ? new ResourceLocation(model) : null;
 
                                 List<NBTCondition> rules = new ArrayList<>();
                                 for (String key : props.stringPropertyNames()) {
@@ -47,7 +49,7 @@ public class FileNBTLoader {
                                         if (val.startsWith("contains:")) {
                                             // TODO: Insert ot Rule
                                             rules.add(new NBTCondition(nbtPath, NBTCondition.Type.CONTAINS, val.substring(9)));
-                                        } else if (val.startsWith("exists:")) {
+                                        } else if (val.equals("exists")) {
                                             rules.add(new NBTCondition(nbtPath, NBTCondition.Type.EXISTS, "exists"));
                                         } else {
                                             rules.add(new NBTCondition(nbtPath, NBTCondition.Type.EQUALS, val));
@@ -55,7 +57,7 @@ public class FileNBTLoader {
                                     }
                                 }
                                 NBTRule rule = new NBTRule(rules, matchLoc);
-                                CONFIG_RULES.add(new NBTHolder(textureLoc, rule));
+                                CONFIG_RULES.add(new NBTHolder(textureLoc, modelLoc, rule));
                             } catch (IOException e) {
                                 CITNBT.LOGGER.error("Unable to read file {}", path);
                             }

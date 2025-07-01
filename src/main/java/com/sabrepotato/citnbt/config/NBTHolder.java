@@ -1,27 +1,27 @@
 package com.sabrepotato.citnbt.config;
 
-import com.sabrepotato.citnbt.resources.NBTCondition;
 import com.sabrepotato.citnbt.resources.NBTRule;
-import net.minecraft.client.renderer.block.model.ModelResourceLocation;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
-
-import java.util.List;
-import java.util.Objects;
 
 public class NBTHolder {
     public final ResourceLocation texture;
+    private final ResourceLocation model;
     private final NBTRule rule;
 
-    public NBTHolder(ResourceLocation texture, NBTRule rule) {
+    public NBTHolder(ResourceLocation texture, ResourceLocation model, NBTRule rule) {
         this.texture = texture;
+        this.model = model;
         this.rule = rule;
     }
 
     public NBTRule getRule() {
         return rule;
     }
+
+    public ResourceLocation getModel() {
+        return model;
+    }
+
     public ResourceLocation getTexture() {
         return texture;
     }

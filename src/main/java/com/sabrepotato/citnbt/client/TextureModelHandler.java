@@ -48,7 +48,9 @@ public class TextureModelHandler {
                 ModelResourceLocation targetModel = rule.getLocation();
 
                 IModel model;
-                if (holder.getTexture() != null) {
+                if (holder.getModel() != null) {
+                    model = ModelLoaderRegistry.getModel(holder.getModel());
+                } else if (holder.getTexture() != null) {
                     model = ModelLoaderRegistry.getModel(targetModel).retexture(
                             ImmutableMap.of("layer0", holder.getTexture().toString()));
                 } else {
