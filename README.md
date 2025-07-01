@@ -34,10 +34,10 @@ texture=cit:items/stick_glow
 - Basic model support (not fully tested)
 - mcmeta animation support
 - Hot reload
+- Multi item support `items=minecraft:paper minecraft:stick`
 
 ## Possible future features
 
-- Multi item support
 - Regular Resourcepack Support
 - Exists true or false to allow more conditions
 - More Optifine conditions
