@@ -27,6 +27,9 @@ texture=cit:items/stick_glow
 ## Behavior
 
 - The NBT condition `exists` must be either `true` or `false`
+- Relative paths do not work like Optifine's do
+- Aside from the one exception above, the *file format* is stable. Unless 
+a serious bug occurs, you can use the same `.properties` file in any version.
 
 ## Current Features
 
@@ -43,4 +46,4 @@ texture=cit:items/stick_glow
 
 - Regular Resourcepack Support
 - More Optifine conditions
-- Proper config (enable/disable hot-reload, set primary assets folder)
+- Proper config (set primary assets folder)
