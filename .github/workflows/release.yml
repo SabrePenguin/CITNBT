@@ -2,7 +2,8 @@ name: Release
 
 on:
   push:
-    tag:
+    tags:
+      - '*'
 
 jobs:
   build:
