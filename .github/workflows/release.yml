@@ -1,11 +1,8 @@
-name: Build
+name: Release
 
 on:
   push:
-    tags-ignore:
-      - "**"
-    branches:
-      - "**"
+    tag:
 
 jobs:
   build:
@@ -27,3 +24,12 @@ jobs:
         run: chmod +x ./gradlew
       - name: Build
         run: ./gradlew build
+
+      - name: Release
+        uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          game-versions: |
+            1.12.2
+          java: |
+            Java 8
+          github-token: ${{ secrets.GITHUB_TOKEN }}
