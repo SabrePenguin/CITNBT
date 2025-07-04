@@ -8,6 +8,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment: Release
     permissions:
       contents: write
 
@@ -34,3 +35,9 @@ jobs:
           java: |
             Java 8
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          curseforge-id: "1298387"
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+
+          modrinth-id: "A1gJtDBi"
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          version-type: "beta"
