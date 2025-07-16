@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import com.sabrepotato.citnbt.CITNBT;
 import com.sabrepotato.citnbt.config.FileNBTLoader;
 import com.sabrepotato.citnbt.config.NBTHolder;
-import com.sabrepotato.citnbt.resources.NBTRule;
+import com.sabrepotato.citnbt.resources.ItemRule;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
@@ -28,8 +28,8 @@ import java.util.Map;
 @Mod.EventBusSubscriber
 public class TextureModelHandler {
 
-    public static final Map<NBTRule, IBakedModel> BAKED_MODELS = new HashMap<>();
-    private static final Map<ModelResourceLocation, List<NBTRule>> RULES_BY_MODEL = new HashMap<>();
+    public static final Map<ItemRule, IBakedModel> BAKED_MODELS = new HashMap<>();
+    private static final Map<ModelResourceLocation, List<ItemRule>> RULES_BY_MODEL = new HashMap<>();
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onTextureStitch(TextureStitchEvent.Pre event) {
         FileNBTLoader.loadFiles();
@@ -50,7 +50,7 @@ public class TextureModelHandler {
         RULES_BY_MODEL.clear();
         for (NBTHolder holder : FileNBTLoader.CONFIG_RULES) {
             try {
-                NBTRule rule = holder.getRule();
+                ItemRule rule = holder.getRule();
                 ModelResourceLocation targetModel = rule.getLocation();
 
                 IModel model;
@@ -72,9 +72,9 @@ public class TextureModelHandler {
             }
         }
 
-        for (Map.Entry<ModelResourceLocation, List<NBTRule>> entry : RULES_BY_MODEL.entrySet()) {
+        for (Map.Entry<ModelResourceLocation, List<ItemRule>> entry : RULES_BY_MODEL.entrySet()) {
             ModelResourceLocation modelLoc = entry.getKey();
-            List<NBTRule> rules = entry.getValue();
+            List<ItemRule> rules = entry.getValue();
 
             IBakedModel original = event.getModelRegistry().getObject(modelLoc);
             if (original != null) {

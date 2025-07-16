@@ -1,20 +1,20 @@
 package com.sabrepotato.citnbt.config;
 
-import com.sabrepotato.citnbt.resources.NBTRule;
+import com.sabrepotato.citnbt.resources.ItemRule;
 import net.minecraft.util.ResourceLocation;
 
 public class NBTHolder {
     public final ResourceLocation texture;
     private final ResourceLocation model;
-    private final NBTRule rule;
+    private final ItemRule rule;
 
-    public NBTHolder(ResourceLocation texture, ResourceLocation model, NBTRule rule) {
+    public NBTHolder(ResourceLocation texture, ResourceLocation model, ItemRule rule) {
         this.texture = texture;
         this.model = model;
         this.rule = rule;
     }
 
-    public NBTRule getRule() {
+    public ItemRule getRule() {
         return rule;
     }
 

@@ -1,4 +1,4 @@
-package com.sabrepotato.citnbt.resources;
+package com.sabrepotato.citnbt.resources.conditions;
 
 import net.minecraft.nbt.*;
 
