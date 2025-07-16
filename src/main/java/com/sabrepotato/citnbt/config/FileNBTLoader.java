@@ -1,8 +1,10 @@
 package com.sabrepotato.citnbt.config;
 
 import com.sabrepotato.citnbt.CITNBT;
-import com.sabrepotato.citnbt.resources.NBTCondition;
-import com.sabrepotato.citnbt.resources.NBTRule;
+import com.sabrepotato.citnbt.resources.conditions.ItemstackCondition;
+import com.sabrepotato.citnbt.resources.conditions.NBTCondition;
+import com.sabrepotato.citnbt.resources.ItemRule;
+import com.sabrepotato.citnbt.resources.conditions.Range;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.util.ResourceLocation;
@@ -34,6 +36,16 @@ public class FileNBTLoader {
                                 Properties props = new Properties();
                                 props.load(in);
                                 List<String> items = Arrays.asList(props.getProperty("items").split(" "));
+                                String damage = props.getProperty("damage");
+                                String stackSize = props.getProperty("stackSize");
+                                ItemstackCondition stack = new ItemstackCondition();
+                                if (damage != null) {
+                                    addDamageRule(stack, damage);
+                                }
+                                if (stackSize != null) {
+                                    addStackRule(stack, stackSize);
+                                }
+//                                List<String> damageRange = Arrays.asList(props.getProperty("damage", "").split(" "));
                                 String texture = props.getProperty("texture");
                                 String model = props.getProperty("model");
                                 if (items.isEmpty() || (texture == null && model == null)) return;
@@ -65,7 +77,7 @@ public class FileNBTLoader {
                                     }
                                 }
                                 itemLocs.forEach(itemLoc -> {
-                                    NBTRule rule = new NBTRule(rules, itemLoc);
+                                    ItemRule rule = new ItemRule(rules, itemLoc, stack);
                                     CONFIG_RULES.add(new NBTHolder(textureLoc, modelLoc, rule));
                                 });
                             } catch (IOException e) {
@@ -76,6 +88,36 @@ public class FileNBTLoader {
                         });
             } catch (Exception e) {
                 CITNBT.LOGGER.error("Unable to read directory {}", resourceDir.toPath());
+            }
+        }
+    }
+
+    public static void addDamageRule(ItemstackCondition condition, String damageRange) {
+        if(damageRange.startsWith("range:")) {
+            List<String> range = Arrays.asList(damageRange.substring(6).split(" "));
+            range.forEach(subRange -> {
+                condition.addDamageRange(Range.parse(subRange, 0, 65535));
+            });
+        } else {
+            try {
+                condition.addDamageRange(Range.parse(damageRange, 0, 65535));
+            } catch (NumberFormatException e){
+                CITNBT.LOGGER.error("Not a valid integer: {}", damageRange);
+            }
+        }
+    }
+
+    public static void addStackRule(ItemstackCondition condition, String stackRange) {
+        if(stackRange.startsWith("range:")) {
+            List<String> range = Arrays.asList(stackRange.substring(6).split(" "));
+            range.forEach(subRange -> {
+                condition.addStackRange(Range.parse(subRange, 0, 65535));
+            });
+        } else {
+            try {
+                condition.addStackRange(Range.parse(stackRange, 0, 65535));
+            } catch (NumberFormatException e){
+                CITNBT.LOGGER.error("Not a valid integer: {}", stackRange);
             }
         }
     }
