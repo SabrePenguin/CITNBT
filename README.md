@@ -11,13 +11,13 @@ instead. This allows compat with mods like contenttweaker, which
 follows this folder style instead.
 
 To conditionally texture an item, a `.properties` file must exist. *This file can
-exist anywhere in the resources folder*, but only applies to one item. This currently *requires* two fields. 
-`match`, the target item. And `texture`, which can be any texture. 
-All other fields are currently optional.
+exist anywhere in the resources folder*, and can apply to a list of items. This currently
+*requires* two fields. `items`, the target item. And `texture` or `model`, which can be any texture
+or valid item. All other fields are currently optional.
 
 Example:
 ```
-match=minecraft:stick
+items=minecraft:stick
 nbt.display.Name=contains:Glow
 texture=cit:items/stick_glow
 ```
