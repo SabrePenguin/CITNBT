@@ -8,7 +8,7 @@ import java.util.regex.Pattern;
 public class Range {
     final int start;
     final int end;
-    private final static Pattern pattern = Pattern.compile("^(-?\\d+)(?:-(-?\\d+)?)?$");
+    private final static Pattern pattern = Pattern.compile("^(\\(-?\\d+\\)|-?\\d+)(?:-(\\(-?\\d+\\)|\\d+)?)?$");
     Range(int start, int end) {
         if (start > end) {
             this.end = start;
@@ -28,14 +28,14 @@ public class Range {
         if (!matcher.matches()) {
             throw new IllegalArgumentException("Invalid range format: " + input);
         }
-        int start = Integer.parseInt(matcher.group(1));
+        int start = Integer.parseInt(matcher.group(1).replace("(","").replace(")", ""));
         if (start < minVal) start = minVal;
         String endstr = matcher.group(2);
         int end;
         if (input.endsWith("-") && endstr == null) {
             end = maxVal;
         } else if (endstr != null) {
-            end = Integer.parseInt(endstr);
+            end = Integer.parseInt(endstr.replace("(","").replace(")", ""));
             if (end < minVal) {
                 CITNBT.LOGGER.warn("Upper limit is below minimum value {}: {}", minVal, end);
                 end = minVal;
