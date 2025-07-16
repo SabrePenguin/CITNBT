@@ -35,7 +35,9 @@ public class TextureModelHandler {
         FileNBTLoader.loadFiles();
         for(NBTHolder rule : FileNBTLoader.CONFIG_RULES) {
 //            CITNBT.LOGGER.info("Loading rule: {} for {}", rule.texture, rule.getRule().getLocation());
-            event.getMap().registerSprite(rule.texture);
+            if (rule.texture != null ) {
+                event.getMap().registerSprite(rule.texture);
+            }
         }
     }
 

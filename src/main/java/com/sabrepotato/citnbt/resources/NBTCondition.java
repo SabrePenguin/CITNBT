@@ -2,10 +2,13 @@ package com.sabrepotato.citnbt.resources;
 
 import net.minecraft.nbt.*;
 
+import java.util.regex.Pattern;
+
 public class NBTCondition {
     public enum Type {
         EQUALS,
         CONTAINS,
+        ICONTAINS,
         EXISTS,
         NOT_EQUALS
     }
@@ -45,7 +48,8 @@ public class NBTCondition {
 
         return switch (type) {
             case EQUALS -> actual.equals(expectedValue);
-            case CONTAINS -> actual.contains(expectedValue);
+            case CONTAINS -> Pattern.compile(Pattern.quote(expectedValue)).matcher(actual).find();
+            case ICONTAINS -> Pattern.compile(Pattern.quote(expectedValue), Pattern.CASE_INSENSITIVE).matcher(actual).find();
             case NOT_EQUALS -> !actual.equals(expectedValue);
             default -> false;
         };

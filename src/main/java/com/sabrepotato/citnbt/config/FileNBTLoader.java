@@ -33,13 +33,12 @@ public class FileNBTLoader {
                             try (InputStream in = Files.newInputStream(path)) {
                                 Properties props = new Properties();
                                 props.load(in);
-
                                 List<String> items = Arrays.asList(props.getProperty("items").split(" "));
                                 String texture = props.getProperty("texture");
                                 String model = props.getProperty("model");
-                                if (items.isEmpty() || texture == null) return;
+                                if (items.isEmpty() || (texture == null && model == null)) return;
                                 List<ModelResourceLocation> itemLocs = items.stream().map(item -> new ModelResourceLocation(item, "inventory")).collect(Collectors.toList());
-                                ResourceLocation textureLoc = new ResourceLocation(texture);
+                                ResourceLocation textureLoc = (texture != null) ? new ResourceLocation(texture): null;
                                 ResourceLocation modelLoc = (model != null) ? new ResourceLocation(model) : null;
 
                                 List<NBTCondition> rules = new ArrayList<>();
@@ -50,6 +49,8 @@ public class FileNBTLoader {
                                         if (val.startsWith("contains:")) {
                                             // TODO: Insert ot Rule
                                             rules.add(new NBTCondition(nbtPath, NBTCondition.Type.CONTAINS, val.substring(9)));
+                                        } else if (val.startsWith("icontains:")) {
+                                            rules.add(new NBTCondition(nbtPath, NBTCondition.Type.ICONTAINS, val.substring(10)));
                                         } else if (val.startsWith("exists:")) {
                                             String bool = val.substring(7);
                                             if (bool.equalsIgnoreCase("true") || bool.equalsIgnoreCase("false")) {
@@ -69,6 +70,8 @@ public class FileNBTLoader {
                                 });
                             } catch (IOException e) {
                                 CITNBT.LOGGER.error("Unable to read file {}", path);
+                            } catch (NullPointerException e) {
+                                CITNBT.LOGGER.error("Could not create an array, you might be missing an items property");
                             }
                         });
             } catch (Exception e) {
