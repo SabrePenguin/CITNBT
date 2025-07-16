@@ -34,6 +34,8 @@ jobs:
             1.12.2
           java: |
             Java 8
+          loaders: |
+            forge
           github-token: ${{ secrets.GITHUB_TOKEN }}
           curseforge-id: "1298387"
           curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
