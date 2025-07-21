@@ -49,7 +49,6 @@ public class FileNBTLoader {
                                 if (hand != null) {
                                     stack.addHand(hand);
                                 }
-//                                List<String> damageRange = Arrays.asList(props.getProperty("damage", "").split(" "));
                                 String texture = props.getProperty("texture");
                                 String model = props.getProperty("model");
                                 if (items.isEmpty() || (texture == null && model == null)) return;
@@ -64,8 +63,12 @@ public class FileNBTLoader {
                                         String val = props.getProperty(key);
                                         if (val.startsWith("contains:")) {
                                             rules.add(new NBTCondition(nbtPath, NBTCondition.Type.CONTAINS, val.substring(9)));
+                                        } else if (val.startsWith("regex:")) {
+                                            rules.add(new NBTCondition(nbtPath, NBTCondition.Type.REGEX, val.substring(6)));
                                         } else if (val.startsWith("icontains:")) {
                                             rules.add(new NBTCondition(nbtPath, NBTCondition.Type.ICONTAINS, val.substring(10)));
+                                        } else if (val.startsWith("iregex:")) {
+                                            rules.add(new NBTCondition(nbtPath, NBTCondition.Type.IREGEX, val.substring(7)));
                                         } else if (val.startsWith("exists:")) {
                                             String bool = val.substring(7);
                                             if (bool.equalsIgnoreCase("true") || bool.equalsIgnoreCase("false")) {

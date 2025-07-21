@@ -10,6 +10,8 @@ public class NBTCondition {
         EQUALS,
         CONTAINS,
         ICONTAINS,
+        REGEX,
+        IREGEX,
         EXISTS,
         NOT_EQUALS,
         RANGE,
@@ -31,6 +33,10 @@ public class NBTCondition {
             this.pattern = toEscapedPattern(expectedValue, false);
         } else if (type == Type.ICONTAINS) {
             this.pattern = toEscapedPattern(expectedValue, true);
+        } else if (type == Type.IREGEX) {
+            this.pattern = Pattern.compile(expectedValue, Pattern.CASE_INSENSITIVE);
+        } else if (type == Type.REGEX) {
+            this.pattern = Pattern.compile(expectedValue);
         } else {
             this.pattern = null;
         }
@@ -72,7 +78,7 @@ public class NBTCondition {
 
         return switch (type) {
             case EQUALS -> actual.equals(expectedValue);
-            case CONTAINS, ICONTAINS -> this.pattern.matcher(actual).find();
+            case CONTAINS, ICONTAINS, REGEX, IREGEX -> this.pattern.matcher(actual).find();
             case NOT_EQUALS -> !actual.equals(expectedValue);
             default -> false;
         };
