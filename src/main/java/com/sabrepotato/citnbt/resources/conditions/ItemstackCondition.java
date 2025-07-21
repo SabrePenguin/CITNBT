@@ -27,13 +27,13 @@ public class ItemstackCondition {
         if (damageRange != null) {
             int damage = itemStack.getItemDamage();
             boolean result = damageRange.stream().anyMatch(range -> range.contains(damage));
-            if (result) return true;
+            if (!result) return false;
         }
         if (stackRange != null) {
             int count = itemStack.getCount();
             boolean result = stackRange.stream().anyMatch(range -> range.contains(count));
-            if(result) return true;
+            if(!result) return false;
         }
-        return false;
+        return true;
     }
 }
