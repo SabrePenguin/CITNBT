@@ -18,6 +18,8 @@ public class NBTCondition {
     private final String nbtPath;
     private final Type type;
     private final String expectedValue;
+    private final Pattern pattern;
+
     private final boolean shouldTagExist;
     private final List<Range> range;
 
@@ -25,6 +27,13 @@ public class NBTCondition {
         this.nbtPath = nbtPath;
         this.type = type;
         this.expectedValue = expectedValue;
+        if (type == Type.CONTAINS) {
+            this.pattern = toEscapedPattern(expectedValue, false);
+        } else if (type == Type.ICONTAINS) {
+            this.pattern = toEscapedPattern(expectedValue, true);
+        } else {
+            this.pattern = null;
+        }
         this.shouldTagExist = expectedValue.equalsIgnoreCase("true");
         this.range = null;
     }
@@ -33,6 +42,7 @@ public class NBTCondition {
         this.nbtPath = nbtPath;
         this.type = type;
         this.expectedValue = null;
+        this.pattern = null;
         this.shouldTagExist = true;
         this.range = rangeValue;
     }
@@ -62,11 +72,41 @@ public class NBTCondition {
 
         return switch (type) {
             case EQUALS -> actual.equals(expectedValue);
-            case CONTAINS -> Pattern.compile(Pattern.quote(expectedValue)).matcher(actual).find();
-            case ICONTAINS -> Pattern.compile(Pattern.quote(expectedValue), Pattern.CASE_INSENSITIVE).matcher(actual).find();
+            case CONTAINS, ICONTAINS -> this.pattern.matcher(actual).find();
             case NOT_EQUALS -> !actual.equals(expectedValue);
             default -> false;
         };
+    }
+
+    private boolean matches() {
+        return true;
+    }
+
+    private Pattern toEscapedPattern(String input, boolean caseInsensitive) {
+        StringBuilder builder = new StringBuilder();
+        for (char c: input.toCharArray()) {
+            switch (c) {
+                case '*': builder.append(".*"); break;
+                case '?': builder.append('.'); break;
+                case '\\':
+                case '.':
+                case '^':
+                case '$':
+                case '+':
+                case '(':
+                case ')':
+                case '[':
+                case ']':
+                case '{':
+                case '}':
+                case '|':
+                    builder.append('\\').append(c); break;
+                default: builder.append(c);
+            }
+        }
+        if (caseInsensitive)
+            return Pattern.compile(builder.toString(), Pattern.CASE_INSENSITIVE);
+        return Pattern.compile(builder.toString());
     }
 
     private String getValueAsString(NBTBase tag) {
