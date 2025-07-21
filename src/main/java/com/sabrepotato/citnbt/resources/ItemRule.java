@@ -3,8 +3,10 @@ package com.sabrepotato.citnbt.resources;
 import com.sabrepotato.citnbt.resources.conditions.ItemstackCondition;
 import com.sabrepotato.citnbt.resources.conditions.NBTCondition;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Objects;
@@ -26,13 +28,13 @@ public class ItemRule {
         return Objects.equals(conditions, other.conditions);
     }
 
-    public boolean matches(ItemStack stack) {
+    public boolean matches(ItemStack stack, @Nullable EntityLivingBase player) {
         //TODO: Add nullability to each type of condition to allow skipping unused conditions
         NBTTagCompound compound = stack.getTagCompound();
         for(NBTCondition condition: conditions) {
             if (!condition.matches(compound)) return false;
         }
-        if (!stackCondition.checkConditions(stack)) return false;
+        if (!stackCondition.checkConditions(stack, player)) return false;
 
         return true;
     }

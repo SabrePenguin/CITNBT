@@ -38,12 +38,16 @@ public class FileNBTLoader {
                                 List<String> items = Arrays.asList(props.getProperty("items").split(" "));
                                 String damage = props.getProperty("damage");
                                 String stackSize = props.getProperty("stackSize");
+                                String hand = props.getProperty("hand");
                                 ItemstackCondition stack = new ItemstackCondition();
                                 if (damage != null) {
                                     addDamageRule(stack, damage);
                                 }
                                 if (stackSize != null) {
                                     addStackRule(stack, stackSize);
+                                }
+                                if (hand != null) {
+                                    stack.addHand(hand);
                                 }
 //                                List<String> damageRange = Arrays.asList(props.getProperty("damage", "").split(" "));
                                 String texture = props.getProperty("texture");

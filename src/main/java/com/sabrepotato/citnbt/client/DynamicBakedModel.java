@@ -63,7 +63,7 @@ public class DynamicBakedModel implements IBakedModel {
             @Override
             public IBakedModel handleItemState(IBakedModel originalModel, ItemStack stack, @Nullable World world, @Nullable EntityLivingBase entity) {
                 for (ItemRule rule : rules) {
-                    if (rule.matches(stack)) {
+                    if (rule.matches(stack, entity)) {
                         IBakedModel bake = TextureModelHandler.BAKED_MODELS.get(rule);
                         if (bake != null) return bake;
                     }
