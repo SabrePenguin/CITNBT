@@ -59,7 +59,6 @@ public class FileNBTLoader {
                                         String nbtPath = key.substring(4);
                                         String val = props.getProperty(key);
                                         if (val.startsWith("contains:")) {
-                                            // TODO: Insert ot Rule
                                             rules.add(new NBTCondition(nbtPath, NBTCondition.Type.CONTAINS, val.substring(9)));
                                         } else if (val.startsWith("icontains:")) {
                                             rules.add(new NBTCondition(nbtPath, NBTCondition.Type.ICONTAINS, val.substring(10)));
@@ -71,6 +70,13 @@ public class FileNBTLoader {
                                                 CITNBT.LOGGER.warn("Unable to apply exists rule to {} on path {}: " +
                                                         "Invalid value: {}", itemLocs, nbtPath, bool);
                                             }
+                                        } else if (val.startsWith("range:")) {
+                                            List<String> range = Arrays.asList(val.substring(6).split(" "));
+                                            List<Range> ranges = new ArrayList<>();
+                                            range.forEach(subRange -> {
+                                                ranges.add(Range.parse(subRange, 0, 65535));
+                                            });
+                                            rules.add(new NBTCondition(nbtPath, NBTCondition.Type.RANGE, ranges));
                                         } else {
                                             rules.add(new NBTCondition(nbtPath, NBTCondition.Type.EQUALS, val));
                                         }

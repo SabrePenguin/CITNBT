@@ -37,6 +37,9 @@ a serious bug occurs, you can use the same `.properties` file in any version.
   - Matches: `nbt.tag.path=matches:ExactNBTMatch`
   - Contains: `nbt.tag.path=contains:TextToContain`
   - Exists: `nbt.tag.path=exists:true`
+  - Range: `nbt.tag.path=range:1-5 9 17`
+- Item Stack conditions
+  - Stack Size: `stackSize=1` or `stackSize=range:1-17 32`
 - Basic model support (not fully tested)
 - mcmeta animation support
 - Hot reload

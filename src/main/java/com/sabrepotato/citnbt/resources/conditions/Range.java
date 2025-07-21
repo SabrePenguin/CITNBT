@@ -23,6 +23,22 @@ public class Range {
         return value >= start && value <= end;
     }
 
+    boolean contains(long value) {
+        return value >= start && value <= end;
+    }
+
+    boolean contains(short value) {
+        return value >= start && value <= end;
+    }
+
+    boolean contains(float value) {
+        return value >= start && value <= end;
+    }
+
+    boolean contains(double value) {
+        return value >= start && value <= end;
+    }
+
     public static Range parse(String input, int minVal, int maxVal) {
         Matcher matcher = pattern.matcher(input.trim());
         if (!matcher.matches()) {
