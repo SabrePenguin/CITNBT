@@ -27,7 +27,7 @@ texture=cit:items/stick_glow
 ## Behavior
 
 - The NBT condition `exists` must be either `true` or `false`
-- Relative paths do not work like Optifine's do
+- Relative paths do not work like Optifine's do (yet)
 - Aside from the one exception above, the *file format* is stable. Unless 
 a serious bug occurs, you can use the same `.properties` file in any version.
 
@@ -35,9 +35,11 @@ a serious bug occurs, you can use the same `.properties` file in any version.
 
 - NBT conditions
   - Matches: `nbt.tag.path=matches:ExactNBTMatch`
-  - Contains: `nbt.tag.path=contains:TextToContain`
+  - Contains/IContains: `nbt.tag.path=contains:TextToContain`
   - Exists: `nbt.tag.path=exists:true`
   - Range: `nbt.tag.path=range:1-5 9 17`
+  - Regex/IRegex: `nbt.display.Name=iregex:Something fishe?y is(n't)? brewing\\.+`
+  - Raw: `nbt.ench=raw:[{lvl:1s,id:2s}]`
 - Item Stack conditions
   - Stack Size: `stackSize=1` or `stackSize=range:1-17 32`
 - Basic model support (not fully tested)
@@ -49,4 +51,4 @@ a serious bug occurs, you can use the same `.properties` file in any version.
 
 - Regular Resourcepack Support
 - More Optifine conditions
-- Proper config (set primary assets folder)
+- Set primary assets folder
