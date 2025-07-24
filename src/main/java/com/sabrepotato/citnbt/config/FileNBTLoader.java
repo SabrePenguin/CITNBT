@@ -84,6 +84,8 @@ public class FileNBTLoader {
                                                 ranges.add(Range.parse(subRange, 0, 65535));
                                             });
                                             rules.add(new NBTCondition(nbtPath, NBTCondition.Type.RANGE, ranges));
+                                        } else if (val.startsWith("raw:")) {
+                                            rules.add(new NBTCondition(nbtPath, NBTCondition.Type.RAW, val.substring(4)));
                                         } else {
                                             rules.add(new NBTCondition(nbtPath, NBTCondition.Type.EQUALS, val));
                                         }

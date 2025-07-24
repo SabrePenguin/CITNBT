@@ -15,6 +15,7 @@ public class NBTCondition {
         EXISTS,
         NOT_EQUALS,
         RANGE,
+        RAW,
     }
 
     private final String nbtPath;
@@ -70,6 +71,8 @@ public class NBTCondition {
             return this.shouldTagExist;
         } else if (type == Type.RANGE) {
             return this.isValueInRange(current);
+        } else if (type == Type.RAW) {
+            return current.toString().equals(expectedValue);
         }
 
         String actual = getValueAsString(current);
