@@ -7,7 +7,9 @@ import com.sabrepotato.citnbt.resources.ItemRule;
 import com.sabrepotato.citnbt.resources.conditions.Range;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
+import net.minecraft.enchantment.Enchantment;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.fml.common.registry.ForgeRegistries;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -39,6 +41,8 @@ public class FileNBTLoader {
                                 String damage = props.getProperty("damage");
                                 String stackSize = props.getProperty("stackSize");
                                 String hand = props.getProperty("hand");
+                                String enchantments = props.getProperty("enchantments", props.getProperty("enchantmentIDs"));
+                                String enchantLevels= props.getProperty("enchantmentLevels");
                                 ItemstackCondition stack = new ItemstackCondition();
                                 if (damage != null) {
                                     addDamageRule(stack, damage);
@@ -48,6 +52,12 @@ public class FileNBTLoader {
                                 }
                                 if (hand != null) {
                                     stack.addHand(hand);
+                                }
+                                if (enchantments != null) {
+                                    splitEnchants(stack, enchantments);
+                                }
+                                if (enchantLevels != null) {
+                                    addEnchantRange(stack, enchantLevels);
                                 }
                                 String texture = props.getProperty("texture");
                                 String model = props.getProperty("model");
@@ -107,6 +117,7 @@ public class FileNBTLoader {
         }
     }
 
+    //TODO: Move these to ItemstackCondition
     public static void addDamageRule(ItemstackCondition condition, String damageRange) {
         if(damageRange.startsWith("range:")) {
             List<String> range = Arrays.asList(damageRange.substring(6).split(" "));
@@ -135,6 +146,25 @@ public class FileNBTLoader {
                 CITNBT.LOGGER.error("Not a valid integer: {}", stackRange);
             }
         }
+    }
+
+    private static void splitEnchants(ItemstackCondition condition, String enchantments) {
+        List<String> splitString = Arrays.asList(enchantments.split(" "));
+        splitString.forEach(e -> {
+            ResourceLocation loc = e.contains(":") ? new ResourceLocation(e) : new ResourceLocation("minecraft", e);
+            Enchantment enchantment = ForgeRegistries.ENCHANTMENTS.getValue(loc);
+            if (enchantment != null) condition.addEnchantment(enchantment);
+            else CITNBT.LOGGER.error("Not a valid registry: {}", loc);
+        });
+    }
+
+    private static void addEnchantRange(ItemstackCondition condition, String levels) {
+        List<String> splitString = Arrays.asList(levels.split(" "));
+        splitString.forEach(subrange -> {
+            splitString.forEach(subRange ->
+                condition.addLevel(Range.parse(subrange, 0, 65535))
+            );
+        });
     }
 
     public static void clearRules() {
