@@ -15,6 +15,9 @@ import java.util.*;
 
 public class ItemstackCondition {
     private List<Range> damageRange;
+    private Integer damageMask;
+    private Float percentageLow;
+    private Float percentageHigh;
     private List<Range> stackRange;
     //TODO: Make a better enchantment format (minecraft:flame:3)
     private List<Enchantment> enchantments;
@@ -49,6 +52,19 @@ public class ItemstackCondition {
         levelRange.add(level);
     }
 
+    public void setDamageMask(int damageMask) {
+        this.damageMask = damageMask;
+    }
+
+    public void setPercentage(int low, int high) {
+        this.percentageLow = low / 100f;
+        this.percentageHigh = high / 100f;
+    }
+
+    public void setPercentage(int percentage) {
+        this.percentageLow = percentage / 100f;
+    }
+
     public void addHand(String hand) {
         if (hand.equalsIgnoreCase("any")) {
             this.hand = null;
@@ -60,7 +76,7 @@ public class ItemstackCondition {
     }
 
     public boolean checkConditions(ItemStack itemStack, @Nullable EntityLivingBase entity) {
-        if (damageRange != null) { //TODO: Percentage, because of COURSE you can also use percentage
+        if (damageRange != null) {
             int damage = itemStack.getItemDamage();
             if (damageMask != null) {
                 damage = damage & damageMask;
@@ -68,6 +84,15 @@ public class ItemstackCondition {
             int finalDamage = damage;
             boolean result = damageRange.stream().anyMatch(range -> range.contains(finalDamage));
             if (!result) return false;
+        }
+        if (percentageLow != null) {
+            int maxDamage = itemStack.getMaxDamage();
+            int currentDamage = itemStack.getItemDamage();
+            if (percentageHigh != null) {
+                if (Math.round(percentageLow * maxDamage) > currentDamage || currentDamage > Math.round(percentageHigh * maxDamage)) return false;
+            } else {
+                if (Math.round(percentageLow * maxDamage) != currentDamage) return false;
+            }
         }
         if (stackRange != null) {
             int count = itemStack.getCount();
@@ -120,11 +145,27 @@ public class ItemstackCondition {
     }
 
     public void addDamageRule(String damageRange) {
-        if(damageRange.startsWith("range:")) {
+        if (damageRange.startsWith("range:")) {
             List<String> range = Arrays.asList(damageRange.substring(6).split(" "));
             range.forEach(subRange -> {
                 this.addDamageRange(Range.parse(subRange, 0, 65535));
             });
+        } else if (damageRange.contains("%")) {
+            List<String> percentRange = Arrays.asList(damageRange.split(" "));
+            if (percentRange.size() == 1) {
+                this.setPercentage(Integer.parseInt(percentRange.get(0).replace("%", "")));
+            } else if (percentRange.size() == 2) {
+                int low = Integer.parseInt(percentRange.get(0).replace("%", ""));
+                int high = Integer.parseInt(percentRange.get(1).replace("%", ""));
+                if (low > high) {
+                    int temp = low;
+                    low = high;
+                    high = temp;
+                }
+                this.setPercentage(low, high);
+            } else {
+                CITNBT.LOGGER.error("Invalid count of percentages. Only 1 or 2 allowed: {}", damageRange);
+            }
         } else {
             try {
                 this.addDamageRange(Range.parse(damageRange, 0, 65535));
