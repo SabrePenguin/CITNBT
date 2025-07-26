@@ -7,9 +7,7 @@ import com.sabrepotato.citnbt.resources.ItemRule;
 import com.sabrepotato.citnbt.resources.conditions.Range;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
-import net.minecraft.enchantment.Enchantment;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.fml.common.registry.ForgeRegistries;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -45,19 +43,19 @@ public class FileNBTLoader {
                                 String enchantLevels= props.getProperty("enchantmentLevels");
                                 ItemstackCondition stack = new ItemstackCondition();
                                 if (damage != null) {
-                                    addDamageRule(stack, damage);
+                                    stack.addDamageRule(damage);
                                 }
                                 if (stackSize != null) {
-                                    addStackRule(stack, stackSize);
+                                    stack.addStackRule(stackSize);
                                 }
                                 if (hand != null) {
                                     stack.addHand(hand);
                                 }
                                 if (enchantments != null) {
-                                    splitEnchants(stack, enchantments);
+                                    stack.addEnchantments(enchantments);
                                 }
                                 if (enchantLevels != null) {
-                                    addEnchantRange(stack, enchantLevels);
+                                    stack.addEnchantRange(enchantLevels);
                                 }
                                 String texture = props.getProperty("texture");
                                 String model = props.getProperty("model");
@@ -115,56 +113,6 @@ public class FileNBTLoader {
                 CITNBT.LOGGER.error("Unable to read directory {}", resourceDir.toPath());
             }
         }
-    }
-
-    //TODO: Move these to ItemstackCondition
-    public static void addDamageRule(ItemstackCondition condition, String damageRange) {
-        if(damageRange.startsWith("range:")) {
-            List<String> range = Arrays.asList(damageRange.substring(6).split(" "));
-            range.forEach(subRange -> {
-                condition.addDamageRange(Range.parse(subRange, 0, 65535));
-            });
-        } else {
-            try {
-                condition.addDamageRange(Range.parse(damageRange, 0, 65535));
-            } catch (NumberFormatException e){
-                CITNBT.LOGGER.error("Not a valid integer: {}", damageRange);
-            }
-        }
-    }
-
-    public static void addStackRule(ItemstackCondition condition, String stackRange) {
-        if(stackRange.startsWith("range:")) {
-            List<String> range = Arrays.asList(stackRange.substring(6).split(" "));
-            range.forEach(subRange -> {
-                condition.addStackRange(Range.parse(subRange, 0, 65535));
-            });
-        } else {
-            try {
-                condition.addStackRange(Range.parse(stackRange, 0, 65535));
-            } catch (NumberFormatException e){
-                CITNBT.LOGGER.error("Not a valid integer: {}", stackRange);
-            }
-        }
-    }
-
-    private static void splitEnchants(ItemstackCondition condition, String enchantments) {
-        List<String> splitString = Arrays.asList(enchantments.split(" "));
-        splitString.forEach(e -> {
-            ResourceLocation loc = e.contains(":") ? new ResourceLocation(e) : new ResourceLocation("minecraft", e);
-            Enchantment enchantment = ForgeRegistries.ENCHANTMENTS.getValue(loc);
-            if (enchantment != null) condition.addEnchantment(enchantment);
-            else CITNBT.LOGGER.error("Not a valid registry: {}", loc);
-        });
-    }
-
-    private static void addEnchantRange(ItemstackCondition condition, String levels) {
-        List<String> splitString = Arrays.asList(levels.split(" "));
-        splitString.forEach(subrange -> {
-            splitString.forEach(subRange ->
-                condition.addLevel(Range.parse(subrange, 0, 65535))
-            );
-        });
     }
 
     public static void clearRules() {
