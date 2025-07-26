@@ -37,6 +37,7 @@ public class FileNBTLoader {
                                 props.load(in);
                                 List<String> items = Arrays.asList(props.getProperty("items").split(" "));
                                 String damage = props.getProperty("damage");
+                                String damageMask = props.getProperty("damageMask");
                                 String stackSize = props.getProperty("stackSize");
                                 String hand = props.getProperty("hand");
                                 String enchantments = props.getProperty("enchantments", props.getProperty("enchantmentIDs"));
@@ -56,6 +57,9 @@ public class FileNBTLoader {
                                 }
                                 if (enchantLevels != null) {
                                     stack.addEnchantRange(enchantLevels);
+                                }
+                                if (damageMask != null) {
+                                    stack.addDamageMask(damageMask);
                                 }
                                 String texture = props.getProperty("texture");
                                 String model = props.getProperty("model");

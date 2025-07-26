@@ -62,7 +62,11 @@ public class ItemstackCondition {
     public boolean checkConditions(ItemStack itemStack, @Nullable EntityLivingBase entity) {
         if (damageRange != null) { //TODO: Percentage, because of COURSE you can also use percentage
             int damage = itemStack.getItemDamage();
-            boolean result = damageRange.stream().anyMatch(range -> range.contains(damage));
+            if (damageMask != null) {
+                damage = damage & damageMask;
+            }
+            int finalDamage = damage;
+            boolean result = damageRange.stream().anyMatch(range -> range.contains(finalDamage));
             if (!result) return false;
         }
         if (stackRange != null) {
@@ -127,6 +131,14 @@ public class ItemstackCondition {
             } catch (NumberFormatException e){
                 CITNBT.LOGGER.error("Not a valid integer: {}", damageRange);
             }
+        }
+    }
+
+    public void addDamageMask(String damageMask) {
+        try {
+            this.setDamageMask(Integer.parseInt(damageMask));
+        } catch (NumberFormatException e) {
+            CITNBT.LOGGER.error("Not a valid integer: {}", damageMask);
         }
     }
 
