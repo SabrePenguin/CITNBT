@@ -52,3 +52,13 @@ a serious bug occurs, you can use the same `.properties` file in any version.
 - Regular Resourcepack Support
 - More Optifine conditions
 - Set primary assets folder
+
+## Breaking Changes
+
+### 0.2 -> 0.3+
+
+Free-floating `.properties` files will require an additional suffix related to their role.
+For example: `item.properties` -> `item.cit.properties`, `animation_item.properties` ->
+`animation_item.anim.properties`. Files that follow Optifine's folder organization
+will not require additional suffix. While I may add support for default being `cit`,
+this should not be counted upon.
