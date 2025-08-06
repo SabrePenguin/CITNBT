@@ -57,13 +57,15 @@ public class NBTCondition {
     public boolean matches(NBTTagCompound compound) {
         if (compound == null) return type == Type.EXISTS && !this.shouldTagExist;
         NBTBase current = compound;
-        for (String key : nbtPath.split("\\.")) {
-            if (!(current instanceof NBTTagCompound)) {
-                return false;
-            }
-            current = ((NBTTagCompound) current).getTag(key);
-            if (current == null) {
-                return type == Type.EXISTS && !this.shouldTagExist;
+        if (!nbtPath.isEmpty()) {
+            for (String key : nbtPath.split("\\.")) {
+                if (!(current instanceof NBTTagCompound)) {
+                    return false;
+                }
+                current = ((NBTTagCompound) current).getTag(key);
+                if (current == null) {
+                    return type == Type.EXISTS && !this.shouldTagExist;
+                }
             }
         }
 

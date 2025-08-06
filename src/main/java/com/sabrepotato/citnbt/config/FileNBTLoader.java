@@ -73,6 +73,8 @@ public class FileNBTLoader {
                     String nbtPath = key.substring(4);
                     String val = properties.getProperty(key);
                     rules.add(setNbtCondition(nbtPath, val));
+                } else if (key.startsWith("nbt")) {
+                    rules.add(setNbtCondition("", nbt));
                 }
             }
             if (type.equals("item")) {
