@@ -24,99 +24,138 @@ public class FileNBTLoader {
     public static List<NBTHolder> CONFIG_RULES = new ArrayList<>();
 
     public static void loadFiles() {
-        File resourceDir = new File(Minecraft.getMinecraft().gameDir, "resources");
+        loadFiles("resources");
+    }
+
+    private static void loadFiles(String directory) {
+        File resourceDir = new File(Minecraft.getMinecraft().gameDir, directory);
 
         if (resourceDir.exists() && resourceDir.isDirectory()) {
             try (Stream<Path> stream = Files.walk(resourceDir.toPath())){
                 stream.filter(Files::isRegularFile)
-                        .filter(p -> p.toString().endsWith(".properties"))
+                        .filter(path -> path.toString().endsWith(".properties"))
                         .forEach(path -> {
-                            CITNBT.LOGGER.info("Loaded file {}", path.toString());
-                            try (InputStream in = Files.newInputStream(path)) {
-                                Properties props = new Properties();
-                                props.load(in);
-                                List<String> items = Arrays.asList(props.getProperty("items").split(" "));
-                                String damage = props.getProperty("damage");
-                                String damageMask = props.getProperty("damageMask");
-                                String stackSize = props.getProperty("stackSize");
-                                String hand = props.getProperty("hand");
-                                String enchantments = props.getProperty("enchantments", props.getProperty("enchantmentIDs"));
-                                String enchantLevels= props.getProperty("enchantmentLevels");
-                                ItemstackCondition stack = new ItemstackCondition();
-                                if (damage != null) {
-                                    stack.addDamageRule(damage);
-                                }
-                                if (stackSize != null) {
-                                    stack.addStackRule(stackSize);
-                                }
-                                if (hand != null) {
-                                    stack.addHand(hand);
-                                }
-                                if (enchantments != null) {
-                                    stack.addEnchantments(enchantments);
-                                }
-                                if (enchantLevels != null) {
-                                    stack.addEnchantRange(enchantLevels);
-                                }
-                                if (damageMask != null) {
-                                    stack.addDamageMask(damageMask);
-                                }
-                                String texture = props.getProperty("texture");
-                                String model = props.getProperty("model");
-                                if (items.isEmpty() || (texture == null && model == null)) return;
-                                List<ModelResourceLocation> itemLocs = items.stream().map(item -> new ModelResourceLocation(item, "inventory")).collect(Collectors.toList());
-                                ResourceLocation textureLoc = (texture != null) ? new ResourceLocation(texture): null;
-                                ResourceLocation modelLoc = (model != null) ? new ResourceLocation(model) : null;
-
-                                List<NBTCondition> rules = new ArrayList<>();
-                                for (String key : props.stringPropertyNames()) {
-                                    if (key.startsWith("nbt.")) {
-                                        String nbtPath = key.substring(4);
-                                        String val = props.getProperty(key);
-                                        if (val.startsWith("contains:")) {
-                                            rules.add(new NBTCondition(nbtPath, NBTCondition.Type.CONTAINS, val.substring(9)));
-                                        } else if (val.startsWith("regex:")) {
-                                            rules.add(new NBTCondition(nbtPath, NBTCondition.Type.REGEX, val.substring(6)));
-                                        } else if (val.startsWith("icontains:")) {
-                                            rules.add(new NBTCondition(nbtPath, NBTCondition.Type.ICONTAINS, val.substring(10)));
-                                        } else if (val.startsWith("iregex:")) {
-                                            rules.add(new NBTCondition(nbtPath, NBTCondition.Type.IREGEX, val.substring(7)));
-                                        } else if (val.startsWith("exists:")) {
-                                            String bool = val.substring(7);
-                                            if (bool.equalsIgnoreCase("true") || bool.equalsIgnoreCase("false")) {
-                                                rules.add(new NBTCondition(nbtPath, NBTCondition.Type.EXISTS, val.substring(7)));
-                                            } else {
-                                                CITNBT.LOGGER.warn("Unable to apply exists rule to {} on path {}: " +
-                                                        "Invalid value: {}", itemLocs, nbtPath, bool);
-                                            }
-                                        } else if (val.startsWith("range:")) {
-                                            List<String> range = Arrays.asList(val.substring(6).split(" "));
-                                            List<Range> ranges = new ArrayList<>();
-                                            range.forEach(subRange -> {
-                                                ranges.add(Range.parse(subRange, 0, 65535));
-                                            });
-                                            rules.add(new NBTCondition(nbtPath, NBTCondition.Type.RANGE, ranges));
-                                        } else if (val.startsWith("raw:")) {
-                                            rules.add(new NBTCondition(nbtPath, NBTCondition.Type.RAW, val.substring(4)));
-                                        } else {
-                                            rules.add(new NBTCondition(nbtPath, NBTCondition.Type.EQUALS, val));
-                                        }
-                                    }
-                                }
-                                itemLocs.forEach(itemLoc -> {
-                                    ItemRule rule = new ItemRule(rules, itemLoc, stack);
-                                    CONFIG_RULES.add(new NBTHolder(textureLoc, modelLoc, rule));
-                                });
-                            } catch (IOException e) {
-                                CITNBT.LOGGER.error("Unable to read file {}", path);
-                            } catch (NullPointerException e) {
-                                CITNBT.LOGGER.error("Could not create an array, you might be missing an items property");
-                            }
-                        });
+                            //We now want to pull this file out
+                            loadProperty(path);
+                    CITNBT.LOGGER.info("Loaded file {}", path.toString());
+                });
             } catch (Exception e) {
                 CITNBT.LOGGER.error("Unable to read directory {}", resourceDir.toPath());
             }
         }
+    }
+
+    private static void loadProperty(Path path) {
+        try (InputStream inputStream = Files.newInputStream(path)) {
+            Properties properties = new Properties();
+            properties.load(inputStream);
+            String method = properties.getProperty("method", "average");
+            String cap = properties.getProperty("cap");
+            String fade = properties.getProperty("fade", "0.5");
+            String useGlint = properties.getProperty("useGlint", "true");
+            String type = properties.getProperty("type", "item");
+            String items = properties.getProperty("items");
+            List<String> itemList = Arrays.asList(properties.getProperty("items").split(" "));
+            String texture = properties.getProperty("texture");
+            String model = properties.getProperty("model");
+            String damage = properties.getProperty("damage");
+            String damageMask = properties.getProperty("damageMask");
+            String stackSize = properties.getProperty("stackSize");
+            String enchantments = properties.getProperty("enchantments", properties.getProperty("enchantmentIDs"));
+            String enchantmentLevels = properties.getProperty("enchantmentLevels");
+            String hand = properties.getProperty("hand", "any");
+            String nbt = properties.getProperty("nbt");
+            String weight = properties.getProperty("weight", "0");
+            ItemstackCondition itemstack = FileNBTLoader.setItemStackCondition(damage, stackSize, hand, enchantments, enchantmentLevels, damageMask);
+            List<NBTCondition> rules = new ArrayList<>();
+            for (String key : properties.stringPropertyNames()) {
+                if (key.startsWith("nbt.")) {
+                    String nbtPath = key.substring(4);
+                    String val = properties.getProperty(key);
+                    rules.add(setNbtCondition(nbtPath, val));
+                }
+            }
+            if (type.equals("item")) {
+                if (items.isEmpty() || (texture == null && model == null)) return;
+                List<ModelResourceLocation> itemLocs = itemList
+                        .stream()
+                        .map(item -> new ModelResourceLocation(item, "inventory"))
+                        .collect(Collectors.toList());
+                ResourceLocation textureLoc = (texture != null) ? new ResourceLocation(texture): null;
+                ResourceLocation modelLoc = (model != null) ? new ResourceLocation(model) : null;
+                itemLocs.forEach(itemLoc -> {
+                    ItemRule rule = new ItemRule(rules, itemLoc, itemstack);
+                    CONFIG_RULES.add(new NBTHolder(textureLoc, modelLoc, rule));
+                });
+            } else if (type.equals("enchantment")) {
+                String blend = properties.getProperty("blend", "add");
+                String speed = properties.getProperty("speed", "1");
+                String rotation = properties.getProperty("rotation");
+                String layer = properties.getProperty("layer", "0");
+                String duration = properties.getProperty("duration", "0");
+            } else if (type.equals("armor")) {
+                //The only one that doesn't use texture
+            } else if (type.equals("elytra")) {
+
+            }
+        } catch (IOException e) {
+            CITNBT.LOGGER.error("Unable to read file {}", path);
+        }
+    }
+
+    private static ItemstackCondition setItemStackCondition(
+            String damage, String stackSize, String hand,
+            String enchantments, String enchantmentLevels, String damageMask) {
+        ItemstackCondition stack = new ItemstackCondition();
+        if (damage != null) {
+            stack.addDamageRule(damage);
+        }
+        if (stackSize != null) {
+            stack.addStackRule(stackSize);
+        }
+        if (hand != null) {
+            stack.addHand(hand);
+        }
+        if (enchantments != null) {
+            stack.addEnchantments(enchantments);
+        }
+        if (enchantmentLevels != null) {
+            stack.addEnchantRange(enchantmentLevels);
+        }
+        if (damageMask != null) {
+            stack.addDamageMask(damageMask);
+        }
+        return stack;
+    }
+
+    private static NBTCondition setNbtCondition(String nbtPath, String value) {
+        if (value.startsWith("contains:")) {
+            return new NBTCondition(nbtPath, NBTCondition.Type.CONTAINS, value.substring(9));
+        } else if (value.startsWith("regex:")) {
+            return new NBTCondition(nbtPath, NBTCondition.Type.REGEX, value.substring(6));
+        } else if (value.startsWith("icontains:")) {
+            return new NBTCondition(nbtPath, NBTCondition.Type.ICONTAINS, value.substring(10));
+        } else if (value.startsWith("iregex:")) {
+            return new NBTCondition(nbtPath, NBTCondition.Type.IREGEX, value.substring(7));
+        } else if (value.startsWith("exists:")) {
+            String bool = value.substring(7);
+            if (bool.equalsIgnoreCase("true") || bool.equalsIgnoreCase("false")) {
+                return new NBTCondition(nbtPath, NBTCondition.Type.EXISTS, value.substring(7));
+            } else {
+                CITNBT.LOGGER.warn("Unable to apply exists rule on path {}: " +
+                        "Invalid value: {}", nbtPath, bool);
+            }
+        } else if (value.startsWith("range:")) {
+            List<String> range = Arrays.asList(value.substring(6).split(" "));
+            List<Range> ranges = new ArrayList<>();
+            range.forEach(subRange -> {
+                ranges.add(Range.parse(subRange, 0, 65535));
+            });
+            return new NBTCondition(nbtPath, NBTCondition.Type.RANGE, ranges);
+        } else if (value.startsWith("raw:")) {
+            return new NBTCondition(nbtPath, NBTCondition.Type.RAW, value.substring(4));
+        }
+        return new NBTCondition(nbtPath, NBTCondition.Type.EQUALS, value);
     }
 
     public static void clearRules() {
