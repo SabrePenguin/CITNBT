@@ -33,7 +33,7 @@ public class TextureModelHandler {
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onTextureStitch(TextureStitchEvent.Pre event) {
         FileNBTLoader.loadFiles();
-        for(NBTHolder rule : FileNBTLoader.CONFIG_RULES) {
+        for(NBTHolder rule : FileNBTLoader.ITEM_RULES) {
 //            CITNBT.LOGGER.info("Loading rule: {} for {}", rule.texture, rule.getRule().getLocation());
             if (rule.texture != null ) {
                 event.getMap().registerSprite(rule.texture);
@@ -48,7 +48,7 @@ public class TextureModelHandler {
         FileNBTLoader.loadFiles();
         BAKED_MODELS.clear();
         RULES_BY_MODEL.clear();
-        for (NBTHolder holder : FileNBTLoader.CONFIG_RULES) {
+        for (NBTHolder holder : FileNBTLoader.ITEM_RULES) {
             try {
                 ItemRule rule = holder.getRule();
                 ModelResourceLocation targetModel = rule.getLocation();

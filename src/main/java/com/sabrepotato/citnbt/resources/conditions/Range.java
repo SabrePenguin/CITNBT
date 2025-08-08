@@ -2,6 +2,7 @@ package com.sabrepotato.citnbt.resources.conditions;
 
 import com.sabrepotato.citnbt.CITNBT;
 
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -68,5 +69,17 @@ public class Range {
 
     public static Range parse(String input) {
         return parse(input, 0, 65535);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        Range range = (Range) o;
+        return start == range.start && end == range.end;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(start, end);
     }
 }

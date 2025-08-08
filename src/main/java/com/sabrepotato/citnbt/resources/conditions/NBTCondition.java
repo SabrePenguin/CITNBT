@@ -3,6 +3,7 @@ package com.sabrepotato.citnbt.resources.conditions;
 import net.minecraft.nbt.*;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 public class NBTCondition {
@@ -89,10 +90,6 @@ public class NBTCondition {
         };
     }
 
-    private boolean matches() {
-        return true;
-    }
-
     private Pattern toEscapedPattern(String input, boolean caseInsensitive) {
         StringBuilder builder = new StringBuilder();
         for (char c: input.toCharArray()) {
@@ -146,5 +143,20 @@ public class NBTCondition {
             if (tag instanceof NBTTagFloat && r.contains(((NBTTagFloat) tag).getFloat())) return true;
         }
         return false;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        NBTCondition that = (NBTCondition) o;
+        return Objects.equals(nbtPath, that.nbtPath) &&
+                type == that.type &&
+                Objects.equals(expectedValue, that.expectedValue) &&
+                Objects.equals(range, that.range);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(nbtPath, type, expectedValue, range);
     }
 }

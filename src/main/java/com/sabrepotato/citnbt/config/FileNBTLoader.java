@@ -12,16 +12,13 @@ import net.minecraft.util.ResourceLocation;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class FileNBTLoader {
 
-    public static List<NBTHolder> CONFIG_RULES = new ArrayList<>();
+    public static List<NBTHolder> ITEM_RULES = new ArrayList<>();
 
     public static void loadFiles() {
         loadFiles("resources");
@@ -43,6 +40,7 @@ public class FileNBTLoader {
                 CITNBT.LOGGER.error("Unable to read directory {}", resourceDir.toPath());
             }
         }
+        Collections.sort(ITEM_RULES);
     }
 
     private static void loadProperty(Path path) {
@@ -66,6 +64,7 @@ public class FileNBTLoader {
             String hand = properties.getProperty("hand", "any");
             String nbt = properties.getProperty("nbt");
             String weight = properties.getProperty("weight", "0");
+            int fileWeight = tryParseInt(weight, 0);
             ItemstackCondition itemstack = FileNBTLoader.setItemStackCondition(damage, stackSize, hand, enchantments, enchantmentLevels, damageMask);
             List<NBTCondition> rules = new ArrayList<>();
             for (String key : properties.stringPropertyNames()) {
@@ -87,7 +86,7 @@ public class FileNBTLoader {
                 ResourceLocation modelLoc = (model != null) ? new ResourceLocation(model) : null;
                 itemLocs.forEach(itemLoc -> {
                     ItemRule rule = new ItemRule(rules, itemLoc, itemstack);
-                    CONFIG_RULES.add(new NBTHolder(textureLoc, modelLoc, rule));
+                    ITEM_RULES.add(new NBTHolder(textureLoc, modelLoc, rule, path.getFileName().toString(), fileWeight));
                 });
             } else if (type.equals("enchantment")) {
                 String blend = properties.getProperty("blend", "add");
@@ -161,6 +160,14 @@ public class FileNBTLoader {
     }
 
     public static void clearRules() {
-        CONFIG_RULES.clear();
+        ITEM_RULES.clear();
+    }
+
+    private static int tryParseInt(String value, int defaultValue) {
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
     }
 }

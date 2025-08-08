@@ -216,4 +216,16 @@ public class ItemstackCondition {
             );
         });
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        ItemstackCondition that = (ItemstackCondition) o;
+        return Objects.equals(damageRange, that.damageRange) && Objects.equals(damageMask, that.damageMask) && Objects.equals(percentageLow, that.percentageLow) && Objects.equals(percentageHigh, that.percentageHigh) && Objects.equals(stackRange, that.stackRange) && Objects.equals(enchantments, that.enchantments) && Objects.equals(levelRange, that.levelRange) && hand == that.hand;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(damageRange, damageMask, percentageLow, percentageHigh, stackRange, enchantments, levelRange, hand);
+    }
 }
