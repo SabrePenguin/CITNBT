@@ -28,17 +28,27 @@ public class FileNBTLoader {
         File resourceDir = new File(Minecraft.getMinecraft().gameDir, directory);
 
         if (resourceDir.exists() && resourceDir.isDirectory()) {
-            try (Stream<Path> stream = Files.walk(resourceDir.toPath())){
+            Path resource = resourceDir.toPath();
+            Path citResource = resource.resolve("optifine/cit");
+            try (Stream<Path> stream = Files.walk(citResource)) {
                 stream.filter(Files::isRegularFile)
                         .filter(path -> path.toString().endsWith(".properties"))
+                        .forEach(FileNBTLoader::loadProperty);
+            } catch (Exception e) {
+
+            }
+            try (Stream<Path> stream = Files.walk(resource)){
+                stream.filter(Files::isRegularFile)
                         .forEach(path -> {
-                            //We now want to pull this file out
-                            loadProperty(path);
+                            if (path.toString().endsWith(".cit.properties")) {
+                                loadProperty(path);
+                            }
                     CITNBT.LOGGER.info("Loaded file {}", path.toString());
                 });
             } catch (Exception e) {
-                CITNBT.LOGGER.error("Unable to read directory {}", resourceDir.toPath());
+                CITNBT.LOGGER.error("Unable to read directory {}", resource);
             }
+
         }
         Collections.sort(ITEM_RULES);
     }
