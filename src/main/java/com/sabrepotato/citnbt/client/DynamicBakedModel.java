@@ -1,6 +1,6 @@
 package com.sabrepotato.citnbt.client;
 
-import com.sabrepotato.citnbt.resources.NBTRule;
+import com.sabrepotato.citnbt.resources.ItemRule;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.IBakedModel;
@@ -19,9 +19,9 @@ import java.util.*;
 
 public class DynamicBakedModel implements IBakedModel {
     private final IBakedModel defaultModel;
-    private final List<NBTRule> rules;
+    private final List<ItemRule> rules;
 
-    public DynamicBakedModel(IBakedModel defaultModel, List<NBTRule> rules) {
+    public DynamicBakedModel(IBakedModel defaultModel, List<ItemRule> rules) {
         this.defaultModel = defaultModel;
         this.rules = rules;
     }
@@ -62,13 +62,17 @@ public class DynamicBakedModel implements IBakedModel {
         return new ItemOverrideList(Collections.emptyList()) {
             @Override
             public IBakedModel handleItemState(IBakedModel originalModel, ItemStack stack, @Nullable World world, @Nullable EntityLivingBase entity) {
-                for (NBTRule rule : rules) {
-                    if (rule.matches(stack)) {
-                        IBakedModel bake = TextureModelHandler.BAKED_MODELS.get(rule);
-                        if (bake != null) return bake;
+                for (ItemRule rule : rules) {
+                    if (rule.matches(stack, entity)) {
+                        IBakedModel candidate = TextureModelHandler.BAKED_MODELS.get(rule);
+                        if (candidate != null) {
+                            IBakedModel result = defaultModel.getOverrides().handleItemState(candidate, stack, world, entity);
+                            if (result != candidate) continue;
+                            return candidate;
+                        }
                     }
                 }
-                return defaultModel;
+                return defaultModel.getOverrides().handleItemState(defaultModel, stack, world, entity);
             }
         };
     }
