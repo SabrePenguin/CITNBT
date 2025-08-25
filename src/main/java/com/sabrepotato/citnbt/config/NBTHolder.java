@@ -4,10 +4,12 @@ import com.sabrepotato.citnbt.resources.ItemRule;
 import net.minecraft.util.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Map;
 import java.util.Objects;
 
 public class NBTHolder implements Comparable<NBTHolder> {
     public final ResourceLocation texture;
+    private final Map<String, ResourceLocation> texture_set;
     private final ResourceLocation model;
     private final ItemRule rule;
     private final String filename;
@@ -15,6 +17,16 @@ public class NBTHolder implements Comparable<NBTHolder> {
 
     public NBTHolder(ResourceLocation texture, ResourceLocation model, ItemRule rule, String filename, int weight) {
         this.texture = texture;
+        this.model = model;
+        this.rule = rule;
+        this.filename = filename;
+        this.weight = weight;
+        this.texture_set = null;
+    }
+
+    public NBTHolder(Map<String, ResourceLocation> texture, ResourceLocation model, ItemRule rule, String filename, int weight) {
+        this.texture_set = texture;
+        this.texture = null;
         this.model = model;
         this.rule = rule;
         this.filename = filename;
@@ -31,6 +43,14 @@ public class NBTHolder implements Comparable<NBTHolder> {
 
     public ResourceLocation getTexture() {
         return texture;
+    }
+
+    public boolean isModelOverload() {
+        return texture_set != null;
+    }
+
+    public Map<String, ResourceLocation> getTextureSet() {
+        return texture_set;
     }
 
     @Override

@@ -19,10 +19,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @SideOnly(Side.CLIENT)
 @Mod.EventBusSubscriber
@@ -59,12 +56,32 @@ public class TextureModelHandler {
                 } else if (holder.getTexture() != null) {
                     model = ModelLoaderRegistry.getModel(targetModel).retexture(
                             ImmutableMap.of("layer0", holder.getTexture().toString()));
+//                } else if (holder.isModelOverload()) {
+//                    Map<String, ResourceLocation> m = holder.getTextureSet();
+//                    ResourceLocation rl = m.get("bow_pulling_1");
+//                    rl = m.get("bow_pulling_0");
+//                    rl = m.get("bow_pulling_2");
+//                    IModel temp = ModelLoaderRegistry.getModel(targetModel);
+//                    List<ItemOverride> list = temp.asVanillaModel().get().getOverrides();
+//                    model = ModelLoaderRegistry.getModel(targetModel).retexture(
+//                            ImmutableMap.of("layer0", m.get("bow_pulling_1").toString())
+//                    );
+//                    model.getTextures();
+//                    //public ModelBlock(
+//                    // @Nullable ResourceLocation parentLocationIn,
+//                    // List<BlockPart> elementsIn,
+//                    // Map<String, String> texturesIn,
+//                    // boolean ambientOcclusionIn,
+//                    // boolean gui3dIn,
+//                    // ItemCameraTransforms cameraTransformsIn,
+//                    // List<ItemOverride> overridesIn)
+////                    new ModelBlock()
+////                    new IModel()
                 } else {
                     model = ModelLoaderRegistry.getModel(targetModel);
                 }
                 IBakedModel bakedModel = model.bake(model.getDefaultState(), DefaultVertexFormats.ITEM,
                         location -> Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(location.toString()));
-
                 BAKED_MODELS.put(rule, bakedModel);
                 RULES_BY_MODEL.computeIfAbsent(targetModel, k -> new ArrayList<>()).add(rule);
             } catch (Exception e) {

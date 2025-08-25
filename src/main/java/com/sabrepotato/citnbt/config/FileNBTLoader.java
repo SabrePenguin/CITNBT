@@ -65,6 +65,7 @@ public class FileNBTLoader {
             String items = properties.getProperty("items");
             List<String> itemList = Arrays.asList(properties.getProperty("items").split(" "));
             String texture = properties.getProperty("texture");
+            Map<String, String> textures = new HashMap<>();
             String model = properties.getProperty("model");
             String damage = properties.getProperty("damage");
             String damageMask = properties.getProperty("damageMask");
@@ -84,20 +85,44 @@ public class FileNBTLoader {
                     rules.add(setNbtCondition(nbtPath, val));
                 } else if (key.startsWith("nbt")) {
                     rules.add(setNbtCondition("", nbt));
+                } else if (key.startsWith("texture.")) {
+                    textures.put(key.substring(8), properties.getProperty(key));
                 }
             }
             if (type.equals("item")) {
-                if (items.isEmpty() || (texture == null && model == null)) return;
+                if (items.isEmpty() || (texture == null && textures.isEmpty() && model == null)) return;
                 List<ModelResourceLocation> itemLocs = itemList
                         .stream()
                         .map(item -> new ModelResourceLocation(item, "inventory"))
                         .collect(Collectors.toList());
-                ResourceLocation textureLoc = (texture != null) ? new ResourceLocation(texture): null;
                 ResourceLocation modelLoc = (model != null) ? new ResourceLocation(model) : null;
-                itemLocs.forEach(itemLoc -> {
-                    ItemRule rule = new ItemRule(rules, itemLoc, itemstack);
-                    ITEM_RULES.add(new NBTHolder(textureLoc, modelLoc, rule, path.getFileName().toString(), fileWeight));
-                });
+                if (textures.isEmpty()) {
+                    ResourceLocation textureLoc = (texture != null) ? new ResourceLocation(texture) : null;
+                    itemLocs.forEach(itemLoc -> {
+                        ItemRule rule = new ItemRule(rules, itemLoc, itemstack);
+                        ITEM_RULES.add(new NBTHolder(textureLoc, modelLoc, rule, path.getFileName().toString(), fileWeight));
+                    });
+                } else {
+                    Map<String, ResourceLocation> map =
+                        textures.entrySet()
+                            .stream()
+                            .collect(
+                                Collectors.toMap(
+                                    Map.Entry::getKey,
+                                    entry -> (entry.getValue() != null) ? new ResourceLocation(entry.getValue()) : null)
+                            );
+                    itemLocs.forEach(itemLoc -> {
+                        ItemRule rule = new ItemRule(rules, itemLoc, itemstack);
+                        ITEM_RULES.add(new NBTHolder(map, modelLoc, rule, path.getFileName().toString(), fileWeight));
+                    });
+//                    for (Map.Entry<String, String> location: textures.entrySet()) {
+//                        ResourceLocation textureLoc = (location.getValue() != null) ? new ResourceLocation(location.getValue()) : null;
+//                        itemLocs.forEach(itemLoc -> {
+//                            ItemRule rule = new ItemRule(rules, itemLoc, itemstack);
+//                            ITEM_RULES.add(new NBTHolder(textureLoc, modelLoc, rule, path.getFileName().toString(), fileWeight));
+//                        });
+//                    }
+                }
             } else if (type.equals("enchantment")) {
                 String blend = properties.getProperty("blend", "add");
                 String speed = properties.getProperty("speed", "1");
