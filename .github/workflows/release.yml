@@ -24,6 +24,8 @@ jobs:
 
       - name: Make executable
         run: chmod +x ./gradlew
+      - name: Cache gradle
+        uses: gradle/actions/setup-gradle@v4
       - name: Build
         run: ./gradlew build
 
