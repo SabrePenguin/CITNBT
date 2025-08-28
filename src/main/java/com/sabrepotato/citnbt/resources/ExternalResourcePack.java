@@ -17,6 +17,7 @@ import java.util.List;
 public class ExternalResourcePack {
     private static final File RESOURCE_DIR = new File(Minecraft.getMinecraft().gameDir, "resources");
     private static final File PACK_META = new File(RESOURCE_DIR, "pack.mcmeta");
+    public static final FakeResourcePack MODEL_PACK = new FakeResourcePack("citnbt");
 
     public static void ensurePackMcmetaExists() {
         if (!PACK_META.exists()) {
@@ -44,6 +45,9 @@ public class ExternalResourcePack {
             if (!defaultPacks.contains(flatPack)) {
                 defaultPacks.add(flatPack);
             }
+            if (!defaultPacks.contains(MODEL_PACK)) {
+                defaultPacks.add(MODEL_PACK);
+            }
             CITNBT.LOGGER.info("Loaded FlatResourcePack: ./resources");
             List<IResourcePack> allPacks = new ArrayList<>(defaultPacks);
             IResourcePack mcPack = mc.defaultResourcePack;
@@ -51,8 +55,8 @@ public class ExternalResourcePack {
                 allPacks.add(mcPack);
             }
             IResourceManager rm = mc.getResourceManager();
-            if (rm instanceof SimpleReloadableResourceManager) {
-                ((SimpleReloadableResourceManager) rm).reloadResources(allPacks);
+            if (rm instanceof SimpleReloadableResourceManager sm) {
+                sm.reloadResources(allPacks);
             }
         } catch (Exception e) {
             CITNBT.LOGGER.error("Unable to load resources: {}", e.getLocalizedMessage());

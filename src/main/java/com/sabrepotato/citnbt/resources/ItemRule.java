@@ -41,7 +41,7 @@ public class ItemRule {
 
     @Override
     public int hashCode() {
-        return Objects.hash(conditions.hashCode(), stackCondition);
+        return Objects.hash(conditions.hashCode(), stackCondition, location);
     }
 
     public ModelResourceLocation getLocation() {

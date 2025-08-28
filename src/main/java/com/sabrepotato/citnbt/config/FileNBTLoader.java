@@ -86,7 +86,11 @@ public class FileNBTLoader {
                 } else if (key.startsWith("nbt")) {
                     rules.add(setNbtCondition("", nbt));
                 } else if (key.startsWith("texture.")) {
-                    textures.put(key.substring(8), properties.getProperty(key));
+                    String subkey = key.substring(8);
+                    if (!subkey.startsWith("items/") && !subkey.contains(":")) { //Assume default minecraft namespace
+                        subkey = "items/" + subkey;
+                    }
+                    textures.put(subkey, properties.getProperty(key));
                 }
             }
             if (type.equals("item")) {
@@ -103,17 +107,17 @@ public class FileNBTLoader {
                         ITEM_RULES.add(new NBTHolder(textureLoc, modelLoc, rule, path.getFileName().toString(), fileWeight));
                     });
                 } else {
-                    Map<String, ResourceLocation> map =
-                        textures.entrySet()
-                            .stream()
-                            .collect(
-                                Collectors.toMap(
-                                    Map.Entry::getKey,
-                                    entry -> (entry.getValue() != null) ? new ResourceLocation(entry.getValue()) : null)
-                            );
+//                    Map<String, ResourceLocation> map =
+//                        textures.entrySet()
+//                            .stream()
+//                            .collect(
+//                                Collectors.toMap(
+//                                    Map.Entry::getKey,
+//                                    entry -> (entry.getValue() != null) ? new ResourceLocation(entry.getValue()) : null)
+//                            );
                     itemLocs.forEach(itemLoc -> {
                         ItemRule rule = new ItemRule(rules, itemLoc, itemstack);
-                        ITEM_RULES.add(new NBTHolder(map, modelLoc, rule, path.getFileName().toString(), fileWeight));
+                        ITEM_RULES.add(new NBTHolder(textures, modelLoc, rule, path.getFileName().toString(), fileWeight));
                     });
 //                    for (Map.Entry<String, String> location: textures.entrySet()) {
 //                        ResourceLocation textureLoc = (location.getValue() != null) ? new ResourceLocation(location.getValue()) : null;
