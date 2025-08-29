@@ -1,9 +1,12 @@
 package com.sabrepotato.citnbt.resources;
 
+import com.google.common.collect.Sets;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.client.resources.data.IMetadataSection;
 import net.minecraft.client.resources.data.MetadataSerializer;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.jetbrains.annotations.Nullable;
@@ -18,10 +21,9 @@ import java.util.*;
 public class FakeResourcePack implements IResourcePack {
 
     private final Map<ResourceLocation, byte[]> modelJsons = new HashMap<>();
-    private final String domain;
+    private final Set<String> domains = Sets.newConcurrentHashSet();
 
-    public FakeResourcePack(String domain) {
-        this.domain = domain;
+    public FakeResourcePack() {
     }
 
     public void addModel(ResourceLocation location, byte[] data) {
@@ -48,7 +50,20 @@ public class FakeResourcePack implements IResourcePack {
 
     @Override
     public Set<String> getResourceDomains() {
-        return Collections.singleton(domain);
+        Minecraft mc = Minecraft.getMinecraft();
+        List<IResourcePack> defaultPacks = ObfuscationReflectionHelper.getPrivateValue(
+                Minecraft.class, mc, "defaultResourcePacks", "field_110449_ao"
+        );
+        for (IResourcePack pack: defaultPacks) {
+            if (pack instanceof FakeResourcePack) break;
+            try {
+                domains.addAll(pack.getResourceDomains());
+            } catch (Exception ignored) {
+                // This is fine
+            }
+        }
+        domains.add("citnbt");
+        return domains;
     }
 
     @Override

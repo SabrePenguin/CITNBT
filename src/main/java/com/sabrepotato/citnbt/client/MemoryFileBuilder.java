@@ -1,16 +1,16 @@
 package com.sabrepotato.citnbt.client;
 
 import com.google.gson.*;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
+import net.minecraft.client.resources.IResource;
 import net.minecraft.util.ResourceLocation;
 
-import javax.annotation.Nonnull;
-import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Objects;
-import java.util.regex.Pattern;
 
 public class MemoryFileBuilder {
     /**
@@ -22,7 +22,6 @@ public class MemoryFileBuilder {
      */
     public static byte[] loadStages(ModelResourceLocation location, Map<String, String> mappedStages) {
         JsonObject base = loadJsonFromResource(location);
-//        JsonObject stageJson = deepCopy(base);
 
         JsonElement textures = base.get("textures");
         if (textures != null && textures.isJsonObject()) {
@@ -62,7 +61,6 @@ public class MemoryFileBuilder {
     }
 
     private static JsonObject loadJsonFromResource(ModelResourceLocation location) {
-        String loc = "/assets/" + location.getNamespace() + "/models/item" + location.getPath() + ".json";
         InputStreamReader reader = new InputStreamReader(
                 Objects.requireNonNull(MemoryFileBuilder.class.getResourceAsStream("/assets/"
                         + location.getNamespace() + "/models/item/"
@@ -71,5 +69,25 @@ public class MemoryFileBuilder {
         );
         JsonParser parser = new JsonParser();
         return parser.parse(reader).getAsJsonObject();
+    }
+
+    public static byte[] cloneAndModify(String original, String texture) throws IOException {
+        original = original.replaceAll("^(.*:)?item[s]/", "");
+        JsonObject json = loadModelJson(new ResourceLocation(original));
+
+        JsonObject textures = json.has("textures") ? json.getAsJsonObject("textures") : new JsonObject();
+        textures.addProperty("layer0", texture);
+        json.add("textures", textures);
+        return json.toString().getBytes(StandardCharsets.UTF_8);
+    }
+
+    private static JsonObject loadModelJson(ResourceLocation loc) throws IOException {
+        IResource res = Minecraft.getMinecraft().getResourceManager().getResource(
+                new ResourceLocation(loc.getNamespace(), "models/item/" + loc.getPath() + ".json")
+        );
+
+        try (InputStreamReader reader = new InputStreamReader(res.getInputStream(), StandardCharsets.UTF_8)) {
+            return new JsonParser().parse(reader).getAsJsonObject();
+        }
     }
 }

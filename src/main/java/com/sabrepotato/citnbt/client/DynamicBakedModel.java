@@ -1,11 +1,9 @@
 package com.sabrepotato.citnbt.client;
 
+import com.sabrepotato.citnbt.CITNBT;
 import com.sabrepotato.citnbt.resources.ItemRule;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.client.renderer.block.model.BakedQuad;
-import net.minecraft.client.renderer.block.model.IBakedModel;
-import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
-import net.minecraft.client.renderer.block.model.ItemOverrideList;
+import net.minecraft.client.renderer.block.model.*;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.ItemStack;
@@ -66,8 +64,8 @@ public class DynamicBakedModel implements IBakedModel {
                     if (rule.matches(stack, entity)) {
                         IBakedModel candidate = TextureModelHandler.BAKED_MODELS.get(rule);
                         if (candidate != null) {
-                            IBakedModel result = defaultModel.getOverrides().handleItemState(candidate, stack, world, entity);
-                            if (result != candidate) continue;
+                            IBakedModel result = candidate.getOverrides().handleItemState(candidate, stack, world, entity);
+                            if (result != candidate) return result;
                             return candidate;
                         }
                     }

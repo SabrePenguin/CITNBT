@@ -33,7 +33,6 @@ public class TextureModelHandler {
 
     public static final Map<ItemRule, IBakedModel> BAKED_MODELS = new HashMap<>();
     private static final Map<ModelResourceLocation, List<ItemRule>> RULES_BY_MODEL = new HashMap<>();
-    private static FakeResourcePack modelPack;
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onTextureStitch(TextureStitchEvent.Pre event) {
@@ -52,12 +51,9 @@ public class TextureModelHandler {
 
     @SubscribeEvent
     public static void onModelRegistry(ModelRegistryEvent event) {
-        if (modelPack == null) {
-            modelPack = new FakeResourcePack("citnbt");
-            Minecraft mc = Minecraft.getMinecraft();
-            if (mc.getResourceManager() instanceof SimpleReloadableResourceManager sm) {
-                sm.reloadResourcePack(modelPack);
-            }
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc.getResourceManager() instanceof SimpleReloadableResourceManager sm) {
+            sm.reloadResourcePack(MODEL_PACK);
         }
     }
 
@@ -89,6 +85,23 @@ public class TextureModelHandler {
                                     "models/item/" + targetModel.getPath() + ".json"),
                             bytes
                     );
+                    for (Map.Entry<String, String> override: m.entrySet()) {
+                        byte[] sub_bytes = MemoryFileBuilder.cloneAndModify(override.getKey(), override.getValue());
+
+                        String new_location = override.getValue().replaceAll("^(.*:)?item(?=/)", "$1items");
+                        ResourceLocation helper = new ResourceLocation(new_location);
+                        MODEL_PACK.addModel(
+                                new ResourceLocation(
+                                        helper.getNamespace(),
+                                        "models/" + helper.getPath() + ".json"
+                                ),
+                                sub_bytes);
+                        ModelResourceLocation t = new ModelResourceLocation(new_location, "inventory"); // Correct
+                        IModel sub_model = ModelLoaderRegistry.getModel(helper);
+                        IBakedModel bakedModel = sub_model.bake(sub_model.getDefaultState(), DefaultVertexFormats.ITEM,
+                                location -> Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(location.toString()));
+                        event.getModelRegistry().putObject(t, bakedModel);
+                    }
                     model = ModelLoaderRegistry.getModel(temp);
                 } else {
                     model = ModelLoaderRegistry.getModel(targetModel);
