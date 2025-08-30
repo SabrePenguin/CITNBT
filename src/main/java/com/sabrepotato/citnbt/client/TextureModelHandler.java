@@ -8,7 +8,10 @@ import com.sabrepotato.citnbt.resources.FakeResourcePack;
 import com.sabrepotato.citnbt.resources.ItemRule;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.IBakedModel;
+import net.minecraft.client.renderer.block.model.ItemOverride;
+import net.minecraft.client.renderer.block.model.ModelBlock;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.resources.SimpleReloadableResourceManager;
 import net.minecraft.util.ResourceLocation;
@@ -17,6 +20,7 @@ import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.client.model.IModel;
 import net.minecraftforge.client.model.ModelLoaderRegistry;
+import net.minecraftforge.common.model.IModelState;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -38,12 +42,12 @@ public class TextureModelHandler {
     public static void onTextureStitch(TextureStitchEvent.Pre event) {
         FileNBTLoader.loadFiles();
         for(NBTHolder rule : FileNBTLoader.ITEM_RULES) {
-//            CITNBT.LOGGER.info("Loading rule: {} for {}", rule.texture, rule.getRule().getLocation());
             if (rule.texture != null ) {
                 event.getMap().registerSprite(rule.texture);
             } else if (rule.getTextureSet() != null) {
                 for (String item: rule.getTextureSet().values()) {
                     event.getMap().registerSprite(new ResourceLocation(item));
+                    CITNBT.LOGGER.info("Creating texture: {}", item);
                 }
             }
         }
@@ -76,33 +80,47 @@ public class TextureModelHandler {
                     model = ModelLoaderRegistry.getModel(targetModel).retexture(
                             ImmutableMap.of("layer0", holder.getTexture().toString()));
                 } else if (holder.isModelOverload()) {
-                    Map<String, String> m = holder.getTextureSet();
-                    byte[] bytes = MemoryFileBuilder.loadStages(targetModel, m);
-                    ResourceLocation temp = new ResourceLocation("citnbt",
-                            "item/" + targetModel.getPath());
-                    MODEL_PACK.addModel(
-                            new ResourceLocation("citnbt",
-                                    "models/item/" + targetModel.getPath() + ".json"),
-                            bytes
-                    );
-                    for (Map.Entry<String, String> override: m.entrySet()) {
-                        byte[] sub_bytes = MemoryFileBuilder.cloneAndModify(override.getKey(), override.getValue());
+//                    Map<String, String> m = holder.getTextureSet();
+//                    byte[] bytes = MemoryFileBuilder.loadStages(targetModel, m);
+//                    ResourceLocation temp = new ResourceLocation("citnbt",
+//                            "item/" + targetModel.getPath());
+//                    MODEL_PACK.addModel(
+//                            new ResourceLocation("citnbt",
+//                                    "models/item/" + targetModel.getPath() + ".json"),
+//                            bytes
+//                    );
+                    // TODO: Find layer0, put it into model retexture.
+                    IModel iModel = ModelLoaderRegistry.getModel(targetModel);
+                    Optional<ModelBlock> modelBlock = iModel.asVanillaModel();
+                    if (modelBlock.isPresent()) {
+                        List<ItemOverride> list = modelBlock.get().getOverrides();
+                        CITNBT.LOGGER.info("List: {}", list);
+                        for(ItemOverride override: list) {
 
-                        String new_location = override.getValue().replaceAll("^(.*:)?item(?=/)", "$1items");
-                        ResourceLocation helper = new ResourceLocation(new_location);
-                        MODEL_PACK.addModel(
-                                new ResourceLocation(
-                                        helper.getNamespace(),
-                                        "models/" + helper.getPath() + ".json"
-                                ),
-                                sub_bytes);
-                        ModelResourceLocation t = new ModelResourceLocation(new_location, "inventory"); // Correct
-                        IModel sub_model = ModelLoaderRegistry.getModel(helper);
-                        IBakedModel bakedModel = sub_model.bake(sub_model.getDefaultState(), DefaultVertexFormats.ITEM,
-                                location -> Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(location.toString()));
-                        event.getModelRegistry().putObject(t, bakedModel);
+                        }
+                        // We need to insert into rules manually here for all other
                     }
-                    model = ModelLoaderRegistry.getModel(temp);
+//                    for (Map.Entry<String, String> override: m.entrySet()) {
+//                        byte[] sub_bytes = MemoryFileBuilder.cloneAndModify(override.getKey(), override.getValue());
+//
+//                        String new_location = override.getValue().replaceAll("^(.*:)?item(?=/)", "$1items");
+//                        ResourceLocation helper = new ResourceLocation(new_location);
+//                        MODEL_PACK.addModel(
+//                                new ResourceLocation(
+//                                        helper.getNamespace(),
+//                                        "models/" + helper.getPath() + ".json"
+//                                ),
+//                                sub_bytes);
+//                        ModelResourceLocation t = new ModelResourceLocation(new_location, "inventory"); // Correct
+//                        IModel sub_model = ModelLoaderRegistry.getModel(helper);
+//                        IBakedModel bakedModel = sub_model.bake(sub_model.getDefaultState(), DefaultVertexFormats.ITEM,
+//                                location -> Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(location.toString()));
+////                        if (event.getModelRegistry().getObject(t) == null) {
+//                            event.getModelRegistry().putObject(t, bakedModel);
+//                            CITNBT.LOGGER.info("Creating model for: {}", t.toString());
+////                        }
+//                    }
+                    model = ModelLoaderRegistry.getModel(targetModel);
                 } else {
                     model = ModelLoaderRegistry.getModel(targetModel);
                 }
