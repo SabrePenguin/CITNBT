@@ -86,13 +86,23 @@ public class FileNBTLoader {
                     rules.add(setNbtCondition("", nbt));
                 } else if (key.startsWith("texture.")) {
                     String subkey = key.substring(8);
-                    if (!subkey.startsWith("items/") && !subkey.contains(":")) { //Assume default minecraft namespace
-                        subkey = "items/" + subkey;
+                    String[] split = subkey.split("\\.");
+                    String namespace;
+                    String item;
+                    if (split.length == 1) {
+                        namespace = "minecraft";
+                        item = split[0];
+                    } else if (split.length == 2) {
+                        namespace = split[0];
+                        item = split[1];
+                    } else {
+                        CITNBT.LOGGER.error("Invalid key, should follow texture[.<namespace>].<stage>: {}", subkey);
+                        continue;
                     }
-                    if (!subkey.contains(":")) {
-                        subkey = "minecraft:" + subkey;
-                    }
-                    textures.put(subkey, properties.getProperty(key));
+                    String newKey = namespace + ":items/" + item;
+                    textures.put(newKey, properties.getProperty(key));
+                } else if (key.startsWith("model.")) {
+                    String subkey = key.substring(6);
                 }
             }
             if (type.equals("item")) {
