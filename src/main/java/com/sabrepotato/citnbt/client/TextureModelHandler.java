@@ -66,7 +66,7 @@ public class TextureModelHandler {
                 ItemRule rule = holder.getRule();
                 ModelResourceLocation targetModel = rule.getLocation();
 
-                IModel model;
+                IModel model = null;
                 if (holder.getModel() != null) {
                     model = ModelLoaderRegistry.getModel(holder.getModel());
                 } else if (holder.getTexture() != null) {
@@ -74,24 +74,39 @@ public class TextureModelHandler {
                             ImmutableMap.of("layer0", holder.getTexture().toString()));
                 } else if (holder.isModelOverload()) {
                     Map<String, String> overloadMap = holder.getTextureSet();
-                    // TODO: Find layer0, put it into model retexture.
+                    // TODO: Remove used textures from map, report remaining as missing
                     IModel iModel = ModelLoaderRegistry.getModel(targetModel);
                     Optional<ModelBlock> modelBlock = iModel.asVanillaModel();
                     if (modelBlock.isPresent()) {
                         List<ItemOverride> list = modelBlock.get().getOverrides();
                         for(int i = list.size()-1; i >= 0; i--) {
                             ItemOverride override = list.get(i);
-                            ItemRule newRule = new ItemRule(holder.getRule(), new Condition(override));
                             String location = override.getLocation().toString().replaceAll("^(.*:)?item(?=/)", "$1items");
+                            if (!overloadMap.containsKey(location)) {
+                                continue;
+                            }
                             IModel newModel = ModelLoaderRegistry.getModel(override.getLocation())
                                     .retexture(ImmutableMap.of("layer0", overloadMap.get(location))).process(ImmutableMap.of());
+                            ItemRule newRule = new ItemRule(holder.getRule(), new Condition(override));
                             IBakedModel bakedModel = newModel.bake(newModel.getDefaultState(), DefaultVertexFormats.ITEM,
                                     loc ->  Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(loc.toString()));
                             BAKED_MODELS.put(newRule, bakedModel);
                             RULES_BY_MODEL.computeIfAbsent(targetModel, k -> new ArrayList<>()).add(newRule);
                         }
+                        Map<String, String> textures = modelBlock.get().textures;
+                        for(Map.Entry<String, String> e : textures.entrySet()) {
+                            String texture = e.getValue();
+                            if (!texture.contains(":")) {
+                                texture = "minecraft:" + texture;
+                            }
+                            if (overloadMap.containsKey(texture)) {
+                                if (model == null)
+                                    model = ModelLoaderRegistry.getModel(targetModel);
+                                model = model.retexture(ImmutableMap.of(e.getKey(), overloadMap.get(texture)));
+                            }
+                        }
                     }
-                    model = ModelLoaderRegistry.getModel(targetModel);
+                    if (model == null) continue;
                 } else {
                     model = ModelLoaderRegistry.getModel(targetModel);
                 }
