@@ -17,7 +17,7 @@ import java.util.List;
 public class ExternalResourcePack {
     private static final File RESOURCE_DIR = new File(Minecraft.getMinecraft().gameDir, "resources");
     private static final File PACK_META = new File(RESOURCE_DIR, "pack.mcmeta");
-    public static final FakeResourcePack MODEL_PACK = new FakeResourcePack();
+//    public static final FakeResourcePack MODEL_PACK = new FakeResourcePack();
 
     public static void ensurePackMcmetaExists() {
         if (!PACK_META.exists()) {
@@ -42,10 +42,10 @@ public class ExternalResourcePack {
                     Minecraft.class, mc, "defaultResourcePacks", "field_110449_ao"
             );
             defaultPacks.remove(flatPack);
-            defaultPacks.remove(MODEL_PACK);
+//            defaultPacks.remove(MODEL_PACK);
 
             defaultPacks.add(flatPack);
-            defaultPacks.add(MODEL_PACK);
+//            defaultPacks.add(MODEL_PACK);
             List<IResourcePack> allPacks = new ArrayList<>(defaultPacks);
             IResourcePack mcPack = mc.defaultResourcePack;
             if (!allPacks.contains(mcPack)) {

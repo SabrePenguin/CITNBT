@@ -43,7 +43,6 @@ public class FileNBTLoader {
                             if (path.toString().endsWith(".cit.properties")) {
                                 loadProperty(path);
                             }
-                    CITNBT.LOGGER.info("Loaded file {}", path.toString());
                 });
             } catch (Exception e) {
                 CITNBT.LOGGER.error("Unable to read directory {}", resource);
@@ -90,6 +89,9 @@ public class FileNBTLoader {
                     if (!subkey.startsWith("items/") && !subkey.contains(":")) { //Assume default minecraft namespace
                         subkey = "items/" + subkey;
                     }
+                    if (!subkey.contains(":")) {
+                        subkey = "minecraft:" + subkey;
+                    }
                     textures.put(subkey, properties.getProperty(key));
                 }
             }
@@ -107,25 +109,10 @@ public class FileNBTLoader {
                         ITEM_RULES.add(new NBTHolder(textureLoc, modelLoc, rule, path.getFileName().toString(), fileWeight));
                     });
                 } else {
-//                    Map<String, ResourceLocation> map =
-//                        textures.entrySet()
-//                            .stream()
-//                            .collect(
-//                                Collectors.toMap(
-//                                    Map.Entry::getKey,
-//                                    entry -> (entry.getValue() != null) ? new ResourceLocation(entry.getValue()) : null)
-//                            );
                     itemLocs.forEach(itemLoc -> {
                         ItemRule rule = new ItemRule(rules, itemLoc, itemstack);
                         ITEM_RULES.add(new NBTHolder(textures, modelLoc, rule, path.getFileName().toString(), fileWeight));
                     });
-//                    for (Map.Entry<String, String> location: textures.entrySet()) {
-//                        ResourceLocation textureLoc = (location.getValue() != null) ? new ResourceLocation(location.getValue()) : null;
-//                        itemLocs.forEach(itemLoc -> {
-//                            ItemRule rule = new ItemRule(rules, itemLoc, itemstack);
-//                            ITEM_RULES.add(new NBTHolder(textureLoc, modelLoc, rule, path.getFileName().toString(), fileWeight));
-//                        });
-//                    }
                 }
             } else if (type.equals("enchantment")) {
                 String blend = properties.getProperty("blend", "add");

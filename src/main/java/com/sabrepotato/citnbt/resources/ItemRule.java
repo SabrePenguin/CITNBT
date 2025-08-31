@@ -34,6 +34,13 @@ public class ItemRule {
         this.condition = overrideCondition;
     }
 
+    public ItemRule(ItemRule original, Condition overrideCondition) {
+        this.conditions = original.conditions;
+        this.location = original.location;
+        this.stackCondition = original.stackCondition;
+        this.condition = overrideCondition;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (!(obj instanceof ItemRule other)) return false;
@@ -56,7 +63,7 @@ public class ItemRule {
 
     @Override
     public int hashCode() {
-        return Objects.hash(conditions.hashCode(), stackCondition, location);
+        return Objects.hash(conditions.hashCode(), stackCondition, location, condition);
     }
 
     public ModelResourceLocation getLocation() {
