@@ -11,25 +11,18 @@ import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.block.model.ItemOverride;
 import net.minecraft.client.renderer.block.model.ModelBlock;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.client.resources.SimpleReloadableResourceManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.ModelBakeEvent;
-import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.client.model.IModel;
-import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.client.model.ModelLoaderRegistry;
-import net.minecraftforge.common.model.IModelState;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-import java.io.IOException;
 import java.util.*;
 
 
@@ -72,21 +65,26 @@ public class TextureModelHandler {
                 } else if (holder.getTexture() != null) {
                     model = ModelLoaderRegistry.getModel(targetModel).retexture(
                             ImmutableMap.of("layer0", holder.getTexture().toString()));
-                } else if (holder.isModelOverload()) {
+                } else if (holder.isTextureOverload()) {
                     Map<String, String> overloadMap = holder.getTextureSet();
                     // TODO: Remove used textures from map, report remaining as missing
+                    // TODO: Check if initial size is same, try to swap to texture instead
                     IModel iModel = ModelLoaderRegistry.getModel(targetModel);
                     Optional<ModelBlock> modelBlock = iModel.asVanillaModel();
                     if (modelBlock.isPresent()) {
                         List<ItemOverride> list = modelBlock.get().getOverrides();
                         for(int i = list.size()-1; i >= 0; i--) {
                             ItemOverride override = list.get(i);
-                            String location = override.getLocation().toString().replaceAll("^(.*:)?item(?=/)", "$1items");
-                            if (!overloadMap.containsKey(location)) {
+                            String textureLocation = override.getLocation().toString().replaceAll("^(.*:)?item(?=/)", "$1items");
+                            String modelLocation = override.getLocation().toString();
+                            if (!overloadMap.containsKey(textureLocation) && !overloadMap.containsKey(modelLocation)) {
                                 continue;
                             }
-                            IModel newModel = ModelLoaderRegistry.getModel(override.getLocation())
-                                    .retexture(ImmutableMap.of("layer0", overloadMap.get(location))).process(ImmutableMap.of());
+                            boolean isModel = overloadMap.containsKey(modelLocation);
+                            IModel newModel = isModel ? ModelLoaderRegistry.getModel(
+                                    new ResourceLocation(overloadMap.get(modelLocation))) :
+                                    ModelLoaderRegistry.getModel(override.getLocation())
+                                            .retexture(ImmutableMap.of("layer0", overloadMap.get(textureLocation)));
                             ItemRule newRule = new ItemRule(holder.getRule(), new Condition(override));
                             IBakedModel bakedModel = newModel.bake(newModel.getDefaultState(), DefaultVertexFormats.ITEM,
                                     loc ->  Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(loc.toString()));
@@ -99,7 +97,10 @@ public class TextureModelHandler {
                             if (!texture.contains(":")) {
                                 texture = "minecraft:" + texture;
                             }
-                            if (overloadMap.containsKey(texture)) {
+                            String modelTexture = texture.replaceAll("^(.*:)?items(?=/)", "$1item");
+                            if (overloadMap.containsKey(modelTexture)) {
+                                model = ModelLoaderRegistry.getModel(new ResourceLocation(overloadMap.get(modelTexture)));
+                            } else if (overloadMap.containsKey(texture)) {
                                 if (model == null)
                                     model = ModelLoaderRegistry.getModel(targetModel);
                                 model = model.retexture(ImmutableMap.of(e.getKey(), overloadMap.get(texture)));

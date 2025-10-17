@@ -103,6 +103,21 @@ public class FileNBTLoader {
                     textures.put(newKey, properties.getProperty(key));
                 } else if (key.startsWith("model.")) {
                     String subkey = key.substring(6);
+                    String[] split = subkey.split("\\.");
+                    String namespace;
+                    String item;
+                    if (split.length == 1){
+                        namespace = "minecraft";
+                        item = split[0];
+                    } else if (split.length == 2) {
+                        namespace = split[0];
+                        item = split[1];
+                    } else {
+                        CITNBT.LOGGER.error("Invalid key, should follow model[.<namespace>].<stage>: {}", subkey);
+                        continue;
+                    }
+                    String newKey = namespace + ":item/" + item;
+                    textures.put(newKey, properties.getProperty(key));
                 }
             }
             if (type.equals("item")) {

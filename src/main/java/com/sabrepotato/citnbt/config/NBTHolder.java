@@ -45,8 +45,12 @@ public class NBTHolder implements Comparable<NBTHolder> {
         return texture;
     }
 
-    public boolean isModelOverload() {
+    public boolean isTextureOverload() {
         return texture_set != null;
+    }
+
+    public boolean isModelOverload() {
+        return false;
     }
 
     public Map<String, String> getTextureSet() {
