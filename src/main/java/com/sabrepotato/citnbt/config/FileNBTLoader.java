@@ -43,7 +43,6 @@ public class FileNBTLoader {
                             if (path.toString().endsWith(".cit.properties")) {
                                 loadProperty(path);
                             }
-                    CITNBT.LOGGER.info("Loaded file {}", path.toString());
                 });
             } catch (Exception e) {
                 CITNBT.LOGGER.error("Unable to read directory {}", resource);
@@ -86,7 +85,39 @@ public class FileNBTLoader {
                 } else if (key.startsWith("nbt")) {
                     rules.add(setNbtCondition("", nbt));
                 } else if (key.startsWith("texture.")) {
-                    textures.put(key.substring(8), properties.getProperty(key));
+                    String subkey = key.substring(8);
+                    String[] split = subkey.split("\\.");
+                    String namespace;
+                    String item;
+                    if (split.length == 1) {
+                        namespace = "minecraft";
+                        item = split[0];
+                    } else if (split.length == 2) {
+                        namespace = split[0];
+                        item = split[1];
+                    } else {
+                        CITNBT.LOGGER.error("Invalid key, should follow texture[.<namespace>].<stage>: {}", subkey);
+                        continue;
+                    }
+                    String newKey = namespace + ":items/" + item;
+                    textures.put(newKey, properties.getProperty(key));
+                } else if (key.startsWith("model.")) {
+                    String subkey = key.substring(6);
+                    String[] split = subkey.split("\\.");
+                    String namespace;
+                    String item;
+                    if (split.length == 1){
+                        namespace = "minecraft";
+                        item = split[0];
+                    } else if (split.length == 2) {
+                        namespace = split[0];
+                        item = split[1];
+                    } else {
+                        CITNBT.LOGGER.error("Invalid key, should follow model[.<namespace>].<stage>: {}", subkey);
+                        continue;
+                    }
+                    String newKey = namespace + ":item/" + item;
+                    textures.put(newKey, properties.getProperty(key));
                 }
             }
             if (type.equals("item")) {
@@ -103,25 +134,10 @@ public class FileNBTLoader {
                         ITEM_RULES.add(new NBTHolder(textureLoc, modelLoc, rule, path.getFileName().toString(), fileWeight));
                     });
                 } else {
-                    Map<String, ResourceLocation> map =
-                        textures.entrySet()
-                            .stream()
-                            .collect(
-                                Collectors.toMap(
-                                    Map.Entry::getKey,
-                                    entry -> (entry.getValue() != null) ? new ResourceLocation(entry.getValue()) : null)
-                            );
                     itemLocs.forEach(itemLoc -> {
                         ItemRule rule = new ItemRule(rules, itemLoc, itemstack);
-                        ITEM_RULES.add(new NBTHolder(map, modelLoc, rule, path.getFileName().toString(), fileWeight));
+                        ITEM_RULES.add(new NBTHolder(textures, modelLoc, rule, path.getFileName().toString(), fileWeight));
                     });
-//                    for (Map.Entry<String, String> location: textures.entrySet()) {
-//                        ResourceLocation textureLoc = (location.getValue() != null) ? new ResourceLocation(location.getValue()) : null;
-//                        itemLocs.forEach(itemLoc -> {
-//                            ItemRule rule = new ItemRule(rules, itemLoc, itemstack);
-//                            ITEM_RULES.add(new NBTHolder(textureLoc, modelLoc, rule, path.getFileName().toString(), fileWeight));
-//                        });
-//                    }
                 }
             } else if (type.equals("enchantment")) {
                 String blend = properties.getProperty("blend", "add");

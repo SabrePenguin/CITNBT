@@ -42,6 +42,11 @@ a serious bug occurs, you can use the same `.properties` file in any version.
   - Raw: `nbt.ench=raw:[{lvl:1s,id:2s}]`
 - Item Stack conditions
   - Stack Size: `stackSize=1` or `stackSize=range:1-17 32`
+- Bow/Override handling
+  - texture: `texture.bow_pulling=<texture_name>`
+    - texture follows `texture[.<namespace>].<stage>` key
+  - model: `model.bow_pulling=<texture_name>`
+    - model follows `model[.<namespace>].<stage>` key
 - Basic model support (not fully tested)
 - mcmeta animation support
 - Hot reload

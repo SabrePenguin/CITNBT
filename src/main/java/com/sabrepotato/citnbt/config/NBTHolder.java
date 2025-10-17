@@ -9,7 +9,7 @@ import java.util.Objects;
 
 public class NBTHolder implements Comparable<NBTHolder> {
     public final ResourceLocation texture;
-    private final Map<String, ResourceLocation> texture_set;
+    private final Map<String, String> texture_set;
     private final ResourceLocation model;
     private final ItemRule rule;
     private final String filename;
@@ -24,7 +24,7 @@ public class NBTHolder implements Comparable<NBTHolder> {
         this.texture_set = null;
     }
 
-    public NBTHolder(Map<String, ResourceLocation> texture, ResourceLocation model, ItemRule rule, String filename, int weight) {
+    public NBTHolder(Map<String, String> texture, ResourceLocation model, ItemRule rule, String filename, int weight) {
         this.texture_set = texture;
         this.texture = null;
         this.model = model;
@@ -45,11 +45,15 @@ public class NBTHolder implements Comparable<NBTHolder> {
         return texture;
     }
 
-    public boolean isModelOverload() {
+    public boolean isTextureOverload() {
         return texture_set != null;
     }
 
-    public Map<String, ResourceLocation> getTextureSet() {
+    public boolean isModelOverload() {
+        return false;
+    }
+
+    public Map<String, String> getTextureSet() {
         return texture_set;
     }
 

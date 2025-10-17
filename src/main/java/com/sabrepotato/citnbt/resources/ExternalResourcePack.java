@@ -17,6 +17,7 @@ import java.util.List;
 public class ExternalResourcePack {
     private static final File RESOURCE_DIR = new File(Minecraft.getMinecraft().gameDir, "resources");
     private static final File PACK_META = new File(RESOURCE_DIR, "pack.mcmeta");
+//    public static final FakeResourcePack MODEL_PACK = new FakeResourcePack();
 
     public static void ensurePackMcmetaExists() {
         if (!PACK_META.exists()) {
@@ -40,19 +41,21 @@ public class ExternalResourcePack {
             List<IResourcePack> defaultPacks = ObfuscationReflectionHelper.getPrivateValue(
                     Minecraft.class, mc, "defaultResourcePacks", "field_110449_ao"
             );
+            defaultPacks.remove(flatPack);
+//            defaultPacks.remove(MODEL_PACK);
 
-            if (!defaultPacks.contains(flatPack)) {
-                defaultPacks.add(flatPack);
-            }
-            CITNBT.LOGGER.info("Loaded FlatResourcePack: ./resources");
+            defaultPacks.add(flatPack);
+//            defaultPacks.add(MODEL_PACK);
             List<IResourcePack> allPacks = new ArrayList<>(defaultPacks);
             IResourcePack mcPack = mc.defaultResourcePack;
             if (!allPacks.contains(mcPack)) {
                 allPacks.add(mcPack);
             }
+            CITNBT.LOGGER.info("Loaded FlatResourcePack: ./resources");
+
             IResourceManager rm = mc.getResourceManager();
-            if (rm instanceof SimpleReloadableResourceManager) {
-                ((SimpleReloadableResourceManager) rm).reloadResources(allPacks);
+            if (rm instanceof SimpleReloadableResourceManager sm) {
+                sm.reloadResources(allPacks);
             }
         } catch (Exception e) {
             CITNBT.LOGGER.error("Unable to load resources: {}", e.getLocalizedMessage());
