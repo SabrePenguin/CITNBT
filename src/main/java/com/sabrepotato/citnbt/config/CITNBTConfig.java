@@ -6,6 +6,7 @@ import net.minecraftforge.common.config.ConfigManager;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.relauncher.Side;
 
 
 @Config(modid = Tags.MODID)
@@ -28,7 +29,7 @@ public class CITNBTConfig {
         }
     }
 
-    @Mod.EventBusSubscriber(modid = Tags.MODID)
+    @Mod.EventBusSubscriber(value = Side.CLIENT, modid = Tags.MODID)
     private static class EventHandler {
         @SubscribeEvent
         public static void onConfigChanged(final ConfigChangedEvent.OnConfigChangedEvent event) {
