@@ -2,6 +2,7 @@ package com.sabrepotato.citnbt.client;
 
 import com.google.common.collect.ImmutableMap;
 import com.sabrepotato.citnbt.CITNBT;
+import com.sabrepotato.citnbt.Tags;
 import com.sabrepotato.citnbt.config.FileNBTLoader;
 import com.sabrepotato.citnbt.config.NBTHolder;
 import com.sabrepotato.citnbt.resources.ItemRule;
@@ -26,8 +27,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import java.util.*;
 
 
-@SideOnly(Side.CLIENT)
-@Mod.EventBusSubscriber
+@Mod.EventBusSubscriber(value = Side.CLIENT, modid = Tags.MODID)
 public class TextureModelHandler {
 
     public static final Map<ItemRule, IBakedModel> BAKED_MODELS = new HashMap<>();
