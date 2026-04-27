@@ -1,6 +1,6 @@
 package com.sabrepotato.citnbt;
 
-import com.sabrepotato.citnbt.proxy.CommonProxy;
+import com.sabrepotato.citnbt.util.IProxy;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
@@ -15,10 +15,9 @@ public class CITNBT {
 
     @SidedProxy(
             modId = Tags.MODID,
-            clientSide = "com.sabrepotato.citnbt.proxy.ClientProxy",
-            serverSide = "com.sabrepotato.citnbt.proxy.CommonProxy"
+            clientSide = "com.sabrepotato.citnbt.client.ClientProxy"
     )
-    public static CommonProxy proxy;
+    public static IProxy proxy;
 
     /**
      * <a href="https://cleanroommc.com/wiki/forge-mod-development/event#overview">
@@ -27,11 +26,11 @@ public class CITNBT {
      */
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
-        proxy.preInit(event);
+        proxy.preInit();
     }
 
     @Mod.EventHandler
     public void init(FMLInitializationEvent event) {
-        proxy.init(event);
+        proxy.init();
     }
 }
