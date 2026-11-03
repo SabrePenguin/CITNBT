@@ -76,14 +76,8 @@ public class ItemstackCondition {
     }
 
     public boolean checkConditions(ItemStack itemStack, @Nullable EntityLivingBase entity) {
-        if (damageRange != null) {
-            int damage = itemStack.getItemDamage();
-            if (damageMask != null) {
-                damage = damage & damageMask;
-            }
-            int finalDamage = damage;
-            boolean result = damageRange.stream().anyMatch(range -> range.contains(finalDamage));
-            if (!result) return false;
+        if (!checkDamageCondition(itemStack)) {
+            return false;
         }
         if (percentageLow != null) {
             int maxDamage = itemStack.getMaxDamage();
@@ -140,6 +134,18 @@ public class ItemstackCondition {
                     }
                 }
             }
+        }
+        return true;
+    }
+
+    public boolean checkDamageCondition(ItemStack itemStack) {
+        if (damageRange != null) {
+            int damage = itemStack.getItemDamage();
+            if (damageMask != null) {
+                damage = damage & damageMask;
+            }
+            int finalDamage = damage;
+            return damageRange.stream().anyMatch(range -> range.contains(finalDamage));
         }
         return true;
     }

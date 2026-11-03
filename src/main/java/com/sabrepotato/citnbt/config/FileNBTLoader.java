@@ -1,6 +1,7 @@
 package com.sabrepotato.citnbt.config;
 
 import com.sabrepotato.citnbt.CITNBT;
+import com.sabrepotato.citnbt.parser.FileLoader;
 import com.sabrepotato.citnbt.resources.conditions.ItemstackCondition;
 import com.sabrepotato.citnbt.resources.conditions.NBTCondition;
 import com.sabrepotato.citnbt.resources.ItemRule;
@@ -33,7 +34,8 @@ public class FileNBTLoader {
             try (Stream<Path> stream = Files.walk(citResource)) {
                 stream.filter(Files::isRegularFile)
                         .filter(path -> path.toString().endsWith(".properties"))
-                        .forEach(FileNBTLoader::loadProperty);
+                        .forEach(path1 -> {loadProperty(path1); FileLoader.loadProperty(path1);})
+                ;
             } catch (Exception e) {
 
             }
@@ -42,6 +44,7 @@ public class FileNBTLoader {
                         .forEach(path -> {
                             if (path.toString().endsWith(".cit.properties")) {
                                 loadProperty(path);
+                                FileLoader.loadProperty(path);
                             }
                 });
             } catch (Exception e) {
