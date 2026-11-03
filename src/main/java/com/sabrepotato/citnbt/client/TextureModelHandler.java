@@ -157,79 +157,64 @@ public class TextureModelHandler {
                 Item item = ForgeRegistries.ITEMS.getValue(location);
                 if (item == null) continue;
                 if (item.getHasSubtypes()) {
-                    NonNullList<ItemStack> stacks = NonNullList.create();
-                    for (CreativeTabs tab: item.getCreativeTabs()) {
-                        item.getSubItems(tab, stacks);
-                    }
-                    IntList list = new IntArrayList(stacks.size());
-                    for (ItemStack stack: stacks) {
-                        list.add(stack.getItemDamage());
-                    }
-                    RangeSet set = holder.itemstackCondition().getDamageRange();
-                    PrimitiveIterator.OfInt iterator = set.toIterator();
-                    boolean success = false;
-                    while (iterator.hasNext()) {
-                        success = bakeVariant(holder, item, iterator.nextInt());
-                    }
-                    if (success)
-                        continue;
-                    List<String> names = getVariantNames(event.getModelLoader(), item);
-                    for (int i = 0; i < names.size(); i++) {
-                        if (holder.itemstackCondition().checkDamageCondition(new ItemStack(item, 1, list.getInt(i)))) {
-                            bake(new ResourceLocation(names.get(i)), holder);
-                        }
-                    }
+                    bakeSubtypes(holder, item, event);
                 } else {
-                    bake(Objects.requireNonNull(item.getRegistryName()), holder);
+                    ModelResourceLocation mrl = ModelLoader.getInventoryVariant(Objects.requireNonNull(item.getRegistryName()).toString());
+                    bake(holder, mrl);
                 }
             }
         }
     }
 
-    private static boolean bakeVariant(ItemHolder holder, Item item, int metadata) {
-        ModelResourceLocation location = getResourceLocation(item, metadata);
-        if (location == null)
-            return false;
-        bake(location, holder);
-        return true;
-    }
-
-    private static void bake(ResourceLocation rl, ItemHolder item) {
-        if (!rl.getNamespace().equals("minecraft")) {
-            CITNBT.LOGGER.warn("Variant names used as primary method to replace modded metadata texture. This is highly " +
-                    "volatile and may not align with metadata.");
+    private static void bakeSubtypes(ItemHolder holder, Item item, ModelBakeEvent event) {
+        NonNullList<ItemStack> stacks = NonNullList.create();
+        for (CreativeTabs tab: item.getCreativeTabs()) {
+            item.getSubItems(tab, stacks);
         }
-        ModelResourceLocation mrl = ModelLoader.getInventoryVariant(rl.toString());
-        if (item.itemType() instanceof ItemHolder.Texture texture) {
-            try {
-                IModel model = ModelLoaderRegistry.getModel(mrl).retexture(
-                        ImmutableMap.of("layer0", texture.texture()));
-                IBakedModel bakedModel = model.bake(model.getDefaultState(), DefaultVertexFormats.ITEM,
-                        location -> Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(location.toString()));
-                ItemRule rule = new ItemRule(item.nbtConditions(), mrl, item.itemstackCondition());
-                BAKED_MODELS.put(rule, bakedModel);
-                RULES_BY_MODEL.computeIfAbsent(mrl, k -> new ArrayList<>()).add(rule);
-            } catch (Exception e) {
-                CITNBT.LOGGER.error("Error baking model for rule: {}", rl);
-                CITNBT.LOGGER.error("Error: {}", e.getLocalizedMessage());
+        IntList list = new IntArrayList(stacks.size());
+        for (ItemStack stack: stacks) {
+            list.add(stack.getItemDamage());
+        }
+        RangeSet set = holder.itemstackCondition().getDamageRange();
+        PrimitiveIterator.OfInt iterator = set.toIterator();
+        boolean success = false;
+        while (iterator.hasNext()) {
+            ModelResourceLocation location = getResourceLocation(item, iterator.nextInt());
+            if (location == null)
+                continue;
+            bake(holder, location);
+            success = true;
+        }
+        if (success)
+            return;
+        List<String> names = getVariantNames(event.getModelLoader(), item);
+        for (int i = 0; i < names.size(); i++) {
+            if (holder.itemstackCondition().checkDamageCondition(new ItemStack(item, 1, list.getInt(i)))) {
+                ModelResourceLocation mrl = ModelLoader.getInventoryVariant(names.get(i));
+                bake(holder, mrl);
             }
         }
     }
 
-    private static void bake(ModelResourceLocation mrl, ItemHolder item) {
-        if (item.itemType() instanceof ItemHolder.Texture texture) {
-            try {
-                IModel model = ModelLoaderRegistry.getModel(mrl).retexture(
-                        ImmutableMap.of("layer0", texture.texture()));
-                IBakedModel bakedModel = model.bake(model.getDefaultState(), DefaultVertexFormats.ITEM,
-                        location -> Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(location.toString()));
-                ItemRule rule = new ItemRule(item.nbtConditions(), mrl, item.itemstackCondition());
-                BAKED_MODELS.put(rule, bakedModel);
-                RULES_BY_MODEL.computeIfAbsent(mrl, k -> new ArrayList<>()).add(rule);
-            } catch (Exception e) {
-                CITNBT.LOGGER.error("Error baking model for rule: {}", mrl);
-                CITNBT.LOGGER.error("Error: {}", e.getLocalizedMessage());
-            }
+    private static void bake(ItemHolder item, ModelResourceLocation mrl) {
+        if (item.itemType() instanceof ItemHolder.Texture) {
+            bakeTexture(item, mrl);
+        }
+    }
+
+    private static void bakeTexture(ItemHolder item, ModelResourceLocation mrl) {
+        if (!(item.itemType() instanceof ItemHolder.Texture texture))
+            return;
+        try {
+            IModel model = ModelLoaderRegistry.getModel(mrl).retexture(
+                    ImmutableMap.of("layer0", texture.texture()));
+            IBakedModel bakedModel = model.bake(model.getDefaultState(), DefaultVertexFormats.ITEM,
+                    location -> Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(location.toString()));
+            ItemRule rule = new ItemRule(item.nbtConditions(), mrl, item.itemstackCondition());
+            BAKED_MODELS.put(rule, bakedModel);
+            RULES_BY_MODEL.computeIfAbsent(mrl, k -> new ArrayList<>()).add(rule);
+        } catch (Exception e) {
+            CITNBT.LOGGER.error("Unable to get model for the ModelResourceLocation {}", mrl);
         }
     }
 
