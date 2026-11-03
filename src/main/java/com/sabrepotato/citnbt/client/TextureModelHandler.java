@@ -77,10 +77,7 @@ public class TextureModelHandler {
                 ModelResourceLocation targetModel = rule.getLocation();
 
                 IModel model = null;
-                if (holder.getModel() != null) {
-                    model = ModelLoaderRegistry.getModel(holder.getModel());
-                } else if (holder.isTextureOverload()) {
-                    {
+                if (holder.isTextureOverload()) {
                     Map<String, String> overloadMap = holder.getTextureSet();
                     // TODO: Remove used textures from map, report remaining as missing
                     // TODO: Check if initial size is same, try to swap to texture instead
@@ -122,7 +119,7 @@ public class TextureModelHandler {
                             }
                         }
                     }
-                    if (model == null) continue;}
+                    if (model == null) continue;
                 } else {
                     model = ModelLoaderRegistry.getModel(targetModel);
                 }
@@ -197,8 +194,11 @@ public class TextureModelHandler {
     }
 
     private static void bake(ItemHolder item, ModelResourceLocation mrl) {
-        if (item.itemType() instanceof ItemHolder.Texture) {
+        ItemHolder.ItemType t = item.itemType();
+        if (t instanceof ItemHolder.Texture) {
             bakeTexture(item, mrl);
+        } else if (t instanceof ItemHolder.Model) {
+            bakeModel(item, mrl);
         }
     }
 
@@ -215,6 +215,23 @@ public class TextureModelHandler {
             RULES_BY_MODEL.computeIfAbsent(mrl, k -> new ArrayList<>()).add(rule);
         } catch (Exception e) {
             CITNBT.LOGGER.error("Unable to get model for the ModelResourceLocation {}", mrl);
+            CITNBT.LOGGER.error("{}", e.getLocalizedMessage());
+        }
+    }
+
+    private static void bakeModel(ItemHolder item, ModelResourceLocation mrl) {
+        if (item.itemType() instanceof ItemHolder.Model modelHolder) {
+            try {
+                IModel model = ModelLoaderRegistry.getModel(new ResourceLocation(modelHolder.model()));
+                IBakedModel bakedModel = model.bake(model.getDefaultState(), DefaultVertexFormats.ITEM,
+                        location -> Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(location.toString()));
+                ItemRule rule = new ItemRule(item.nbtConditions(), mrl, item.itemstackCondition());
+                BAKED_MODELS.put(rule, bakedModel);
+                RULES_BY_MODEL.computeIfAbsent(mrl, k -> new ArrayList<>()).add(rule);
+            } catch (Exception e) {
+                CITNBT.LOGGER.error("Unable to locate model {}", modelHolder.model());
+                CITNBT.LOGGER.error("{}", e.getLocalizedMessage());
+            }
         }
     }
 
