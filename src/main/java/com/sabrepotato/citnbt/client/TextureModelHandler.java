@@ -9,6 +9,7 @@ import com.sabrepotato.citnbt.parser.FileLoader;
 import com.sabrepotato.citnbt.parser.ItemHolder;
 import com.sabrepotato.citnbt.resources.ItemRule;
 import com.sabrepotato.citnbt.resources.conditions.Condition;
+import com.sabrepotato.citnbt.resources.conditions.RangeSet;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.minecraft.client.Minecraft;
@@ -33,6 +34,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.registries.IRegistryDelegate;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.lang.reflect.Field;
@@ -77,9 +79,6 @@ public class TextureModelHandler {
                 IModel model = null;
                 if (holder.getModel() != null) {
                     model = ModelLoaderRegistry.getModel(holder.getModel());
-                } else if (holder.getTexture() != null) {
-                    model = ModelLoaderRegistry.getModel(targetModel).retexture(
-                            ImmutableMap.of("layer0", holder.getTexture().toString()));
                 } else if (holder.isTextureOverload()) {
                     {
                     Map<String, String> overloadMap = holder.getTextureSet();
@@ -166,8 +165,14 @@ public class TextureModelHandler {
                     for (ItemStack stack: stacks) {
                         list.add(stack.getItemDamage());
                     }
-                    // Run this second, run ModelLoader.customModels check first, as that contains customModelDefinitions of modded items
-                    // Run through the range
+                    RangeSet set = holder.itemstackCondition().getDamageRange();
+                    PrimitiveIterator.OfInt iterator = set.toIterator();
+                    boolean success = false;
+                    while (iterator.hasNext()) {
+                        success = bakeVariant(holder, item, iterator.nextInt());
+                    }
+                    if (success)
+                        continue;
                     List<String> names = getVariantNames(event.getModelLoader(), item);
                     for (int i = 0; i < names.size(); i++) {
                         if (holder.itemstackCondition().checkDamageCondition(new ItemStack(item, 1, list.getInt(i)))) {
@@ -181,7 +186,19 @@ public class TextureModelHandler {
         }
     }
 
+    private static boolean bakeVariant(ItemHolder holder, Item item, int metadata) {
+        ModelResourceLocation location = getResourceLocation(item, metadata);
+        if (location == null)
+            return false;
+        bake(location, holder);
+        return true;
+    }
+
     private static void bake(ResourceLocation rl, ItemHolder item) {
+        if (!rl.getNamespace().equals("minecraft")) {
+            CITNBT.LOGGER.warn("Variant names used as primary method to replace modded metadata texture. This is highly " +
+                    "volatile and may not align with metadata.");
+        }
         ModelResourceLocation mrl = ModelLoader.getInventoryVariant(rl.toString());
         if (item.itemType() instanceof ItemHolder.Texture texture) {
             try {
@@ -194,6 +211,23 @@ public class TextureModelHandler {
                 RULES_BY_MODEL.computeIfAbsent(mrl, k -> new ArrayList<>()).add(rule);
             } catch (Exception e) {
                 CITNBT.LOGGER.error("Error baking model for rule: {}", rl);
+                CITNBT.LOGGER.error("Error: {}", e.getLocalizedMessage());
+            }
+        }
+    }
+
+    private static void bake(ModelResourceLocation mrl, ItemHolder item) {
+        if (item.itemType() instanceof ItemHolder.Texture texture) {
+            try {
+                IModel model = ModelLoaderRegistry.getModel(mrl).retexture(
+                        ImmutableMap.of("layer0", texture.texture()));
+                IBakedModel bakedModel = model.bake(model.getDefaultState(), DefaultVertexFormats.ITEM,
+                        location -> Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(location.toString()));
+                ItemRule rule = new ItemRule(item.nbtConditions(), mrl, item.itemstackCondition());
+                BAKED_MODELS.put(rule, bakedModel);
+                RULES_BY_MODEL.computeIfAbsent(mrl, k -> new ArrayList<>()).add(rule);
+            } catch (Exception e) {
+                CITNBT.LOGGER.error("Error baking model for rule: {}", mrl);
                 CITNBT.LOGGER.error("Error: {}", e.getLocalizedMessage());
             }
         }
@@ -215,7 +249,7 @@ public class TextureModelHandler {
                 throw new RuntimeException(e);
             }
         }
-        return customModels.get(Pair.of(item, meta));
+        return customModels.get(ImmutablePair.of(item.delegate, meta));
     }
 
     @SuppressWarnings("unchecked")
