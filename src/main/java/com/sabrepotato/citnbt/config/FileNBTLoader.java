@@ -1,11 +1,12 @@
 package com.sabrepotato.citnbt.config;
 
+import com.mojang.realmsclient.util.Pair;
 import com.sabrepotato.citnbt.CITNBT;
 import com.sabrepotato.citnbt.parser.FileLoader;
 import com.sabrepotato.citnbt.resources.conditions.ItemstackCondition;
 import com.sabrepotato.citnbt.resources.conditions.NBTCondition;
 import com.sabrepotato.citnbt.resources.ItemRule;
-import com.sabrepotato.citnbt.resources.conditions.Range;
+import com.sabrepotato.citnbt.resources.conditions.RangeSet;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.util.ResourceLocation;
@@ -202,9 +203,10 @@ public class FileNBTLoader {
             }
         } else if (value.startsWith("range:")) {
             List<String> range = Arrays.asList(value.substring(6).split(" "));
-            List<Range> ranges = new ArrayList<>();
+            RangeSet ranges = new RangeSet();
             range.forEach(subRange -> {
-                ranges.add(Range.parse(subRange, 0, 65535));
+                Pair<Integer, Integer> pair = RangeSet.parse(subRange, 0, 65535);
+                ranges.add(pair.first(), pair.second());
             });
             return new NBTCondition(nbtPath, NBTCondition.Type.RANGE, ranges);
         } else if (value.startsWith("raw:")) {

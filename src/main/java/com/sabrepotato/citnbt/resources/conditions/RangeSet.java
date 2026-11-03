@@ -1,11 +1,14 @@
 package com.sabrepotato.citnbt.resources.conditions;
 
+import com.mojang.realmsclient.util.Pair;
 import com.sabrepotato.citnbt.CITNBT;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 
 import java.util.NoSuchElementException;
 import java.util.PrimitiveIterator;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class RangeSet {
 
@@ -65,6 +68,18 @@ public class RangeSet {
         return (trueIndex % 2 != 0);
     }
 
+    public boolean contains(long value) {
+        return false;
+    }
+
+    public boolean contains(float value) {
+        return false;
+    }
+
+    public boolean contains(double value) {
+        return false;
+    }
+
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder("[");
@@ -75,6 +90,47 @@ public class RangeSet {
         }
         builder.append("]");
         return builder.toString();
+    }
+
+    @Override
+    @SuppressWarnings("EqualsNullCheck")
+    public boolean equals(Object obj) {
+        if (!(obj instanceof RangeSet other)) return false;
+        return boundaries.equals(other.boundaries);
+    }
+
+    @Override
+    public int hashCode() {
+        return boundaries.hashCode();
+    }
+
+    private final static Pattern pattern = Pattern.compile("^(\\(-?\\d+\\)|-?\\d+)(?:-(\\(-?\\d+\\)|\\d+)?)?$");
+
+    public static Pair<Integer, Integer> parse(String input, int minVal, int maxVal) {
+        Matcher matcher = pattern.matcher(input.trim());
+        if (!matcher.matches()) {
+            throw new IllegalArgumentException("Invalid range format: " + input);
+        }
+        int start = Integer.parseInt(matcher.group(1).replace("(","").replace(")", ""));
+        if (start < minVal) start = minVal;
+        String endstr = matcher.group(2);
+        int end;
+        if (input.endsWith("-") && endstr == null) {
+            end = maxVal;
+        } else if (endstr != null) {
+            end = Integer.parseInt(endstr.replace("(","").replace(")", ""));
+            if (end < minVal) {
+                CITNBT.LOGGER.warn("Upper limit is below minimum value {}: {}", minVal, end);
+                end = minVal;
+            }
+            if (end > maxVal) {
+                CITNBT.LOGGER.warn("Upper limit is above maximum value {}: {}", maxVal, end);
+                end = maxVal;
+            }
+        } else {
+            end = start;
+        }
+        return Pair.of(start, end+1);
     }
 
     public PrimitiveIterator.OfInt toIterator() {
