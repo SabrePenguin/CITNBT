@@ -2,7 +2,6 @@ package com.sabrepotato.citnbt.resources.conditions;
 
 import net.minecraft.nbt.*;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
@@ -25,7 +24,7 @@ public class NBTCondition {
     private final Pattern pattern;
 
     private final boolean shouldTagExist;
-    private final List<Range> range;
+    private final RangeSet range;
 
     public NBTCondition(String nbtPath, Type type, String expectedValue) {
         this.nbtPath = nbtPath;
@@ -46,7 +45,7 @@ public class NBTCondition {
         this.range = null;
     }
 
-    public NBTCondition(String nbtPath, Type type, List<Range> rangeValue) {
+    public NBTCondition(String nbtPath, Type type, RangeSet rangeValue) {
         this.nbtPath = nbtPath;
         this.type = type;
         this.expectedValue = null;
@@ -135,13 +134,11 @@ public class NBTCondition {
     }
 
     private boolean isValueInRange(NBTBase tag) {
-        for (Range r: this.range) {
-            if (tag instanceof NBTTagInt && r.contains(((NBTTagInt) tag).getInt())) return true;
-            if (tag instanceof NBTTagLong && r.contains(((NBTTagLong) tag).getLong())) return true;
-            if (tag instanceof NBTTagShort && r.contains(((NBTTagShort) tag).getShort())) return true;
-            if (tag instanceof NBTTagDouble && r.contains(((NBTTagDouble) tag).getDouble())) return true;
-            if (tag instanceof NBTTagFloat && r.contains(((NBTTagFloat) tag).getFloat())) return true;
-        }
+        if (tag instanceof NBTTagInt && range.contains(((NBTTagInt) tag).getInt())) return true;
+        if (tag instanceof NBTTagLong && range.contains(((NBTTagLong) tag).getLong())) return true;
+        if (tag instanceof NBTTagShort && range.contains(((NBTTagShort) tag).getShort())) return true;
+        if (tag instanceof NBTTagDouble && range.contains(((NBTTagDouble) tag).getDouble())) return true;
+        if (tag instanceof NBTTagFloat && range.contains(((NBTTagFloat) tag).getFloat())) return true;
         return false;
     }
 

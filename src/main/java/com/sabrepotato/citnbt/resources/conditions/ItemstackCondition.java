@@ -1,5 +1,6 @@
 package com.sabrepotato.citnbt.resources.conditions;
 
+import com.mojang.realmsclient.util.Pair;
 import com.sabrepotato.citnbt.CITNBT;
 import com.sabrepotato.citnbt.config.CITNBTConfig;
 import net.minecraft.enchantment.Enchantment;
@@ -14,28 +15,40 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 
 public class ItemstackCondition {
-    private List<Range> damageRange;
+    private RangeSet damageRange;
     private Integer damageMask;
     private Float percentageLow;
     private Float percentageHigh;
-    private List<Range> stackRange;
+    private RangeSet stackRange;
     //TODO: Make a better enchantment format (minecraft:flame:3)
     private List<Enchantment> enchantments;
-    private List<Range> levelRange;
+    private RangeSet levelRange;
     private EnumHand hand;
 
-    public void addDamageRange(Range range) {
-        if (damageRange == null) {
-            this.damageRange = new ArrayList<>();
-        }
-        this.damageRange.add(range);
+    public void addDamageRange(int value) {
+        addDamageRange(value, value+1);
     }
 
-    public void addStackRange(Range range) {
-        if (stackRange == null) {
-            this.stackRange = new ArrayList<>();
+    public void addDamageRange(int lower, int upper) {
+        if (damageRange == null) {
+            damageRange = new RangeSet();
         }
-        this.stackRange.add(range);
+        damageRange.add(lower, upper);
+    }
+
+    public RangeSet getDamageRange() {
+        return damageRange;
+    }
+
+    public void addStackRange(int value) {
+        addStackRange(value, value+1);
+    }
+
+    public void addStackRange(int lower, int upper) {
+        if (stackRange == null) {
+            stackRange = new RangeSet();
+        }
+        stackRange.add(lower, upper);
     }
 
     public void addEnchantment(Enchantment enchantment) {
@@ -45,11 +58,15 @@ public class ItemstackCondition {
         enchantments.add(enchantment);
     }
 
-    public void addLevel(Range level) {
+    public void addLevel(int value) {
+        addLevel(value, value+1);
+    }
+
+    public void addLevel(int lower, int upper) {
         if (levelRange == null) {
-            levelRange = new ArrayList<>();
+            levelRange = new RangeSet();
         }
-        levelRange.add(level);
+        levelRange.add(lower, upper);
     }
 
     public void setDamageMask(int damageMask) {
@@ -76,14 +93,8 @@ public class ItemstackCondition {
     }
 
     public boolean checkConditions(ItemStack itemStack, @Nullable EntityLivingBase entity) {
-        if (damageRange != null) {
-            int damage = itemStack.getItemDamage();
-            if (damageMask != null) {
-                damage = damage & damageMask;
-            }
-            int finalDamage = damage;
-            boolean result = damageRange.stream().anyMatch(range -> range.contains(finalDamage));
-            if (!result) return false;
+        if (!checkDamageCondition(itemStack)) {
+            return false;
         }
         if (percentageLow != null) {
             int maxDamage = itemStack.getMaxDamage();
@@ -96,18 +107,18 @@ public class ItemstackCondition {
         }
         if (stackRange != null) {
             int count = itemStack.getCount();
-            boolean result = stackRange.stream().anyMatch(range -> range.contains(count));
+            boolean result = stackRange.contains(count);
             if(!result) return false;
         }
         if (enchantments != null) {
             if (levelRange != null) {
                 if(CITNBTConfig.compat.matchOneEnchAndLevel) {
                     if (enchantments.stream().noneMatch(ench ->
-                            levelRange.stream().anyMatch(range -> range.contains(EnchantmentHelper.getEnchantmentLevel(ench, itemStack)))
+                            levelRange.contains(EnchantmentHelper.getEnchantmentLevel(ench, itemStack))
                     )) return false;
                 } else {
                     if (!enchantments.stream().allMatch(ench ->
-                            levelRange.stream().anyMatch(range -> range.contains(EnchantmentHelper.getEnchantmentLevel(ench, itemStack)))
+                            levelRange.contains(EnchantmentHelper.getEnchantmentLevel(ench, itemStack))
                     )) return false;
                 }
             } else {
@@ -124,7 +135,7 @@ public class ItemstackCondition {
         }
         if (levelRange != null && enchantments == null) {
             if (EnchantmentHelper.getEnchantments(itemStack).values().stream().noneMatch(level ->
-                    levelRange.stream().anyMatch(range -> range.contains(level))
+                    levelRange.contains(level)
             )) return false;
         }
         if (hand != null && entity != null) {
@@ -144,11 +155,24 @@ public class ItemstackCondition {
         return true;
     }
 
+    public boolean checkDamageCondition(ItemStack itemStack) {
+        if (damageRange != null) {
+            int damage = itemStack.getItemDamage();
+            if (damageMask != null) {
+                damage = damage & damageMask;
+            }
+            int finalDamage = damage;
+            return damageRange.contains(finalDamage);
+        }
+        return true;
+    }
+
     public void addDamageRule(String damageRange) {
         if (damageRange.startsWith("range:")) {
             List<String> range = Arrays.asList(damageRange.substring(6).split(" "));
             range.forEach(subRange -> {
-                this.addDamageRange(Range.parse(subRange, 0, 65535));
+                Pair<Integer, Integer> pair = RangeSet.parse(subRange, 0, 65535);
+                this.addDamageRange(pair.first(), pair.second());
             });
         } else if (damageRange.contains("%")) {
             List<String> percentRange = Arrays.asList(damageRange.split(" "));
@@ -168,7 +192,8 @@ public class ItemstackCondition {
             }
         } else {
             try {
-                this.addDamageRange(Range.parse(damageRange, 0, 65535));
+                Pair<Integer, Integer> pair = RangeSet.parse(damageRange, 0, 65535);
+                this.addDamageRange(pair.first(), pair.second());
             } catch (NumberFormatException e){
                 CITNBT.LOGGER.error("Not a valid integer: {}", damageRange);
             }
@@ -187,11 +212,13 @@ public class ItemstackCondition {
         if(stackRange.startsWith("range:")) {
             List<String> range = Arrays.asList(stackRange.substring(6).split(" "));
             range.forEach(subRange -> {
-                this.addStackRange(Range.parse(subRange, 0, 65535));
+                Pair<Integer, Integer> pair = RangeSet.parse(subRange, 0, 65535);
+                this.addStackRange(pair.first(), pair.second());
             });
         } else {
             try {
-                this.addStackRange(Range.parse(stackRange, 0, 65535));
+                Pair<Integer, Integer> pair = RangeSet.parse(stackRange, 0, 65535);
+                this.addStackRange(pair.first(), pair.second());
             } catch (NumberFormatException e){
                 CITNBT.LOGGER.error("Not a valid integer: {}", stackRange);
             }
@@ -211,8 +238,10 @@ public class ItemstackCondition {
     public void addEnchantRange(String levels) {
         List<String> splitString = Arrays.asList(levels.split(" "));
         splitString.forEach(subrange -> {
-            splitString.forEach(subRange ->
-                    this.addLevel(Range.parse(subrange, 0, 65535))
+            splitString.forEach(subRange -> {
+                        Pair<Integer, Integer> pair = RangeSet.parse(subrange, 0, 65535);
+                        this.addLevel(pair.first(), pair.second());
+                    }
             );
         });
     }
