@@ -2,7 +2,6 @@ package com.sabrepotato.citnbt.parser;
 
 import com.mojang.realmsclient.util.Pair;
 import com.sabrepotato.citnbt.CITNBT;
-import com.sabrepotato.citnbt.config.NBTHolder;
 import com.sabrepotato.citnbt.resources.conditions.ItemstackCondition;
 import com.sabrepotato.citnbt.resources.conditions.NBTCondition;
 import com.sabrepotato.citnbt.resources.conditions.RangeSet;
@@ -22,8 +21,7 @@ import java.util.stream.Collectors;
 
 public class FileLoader {
 
-    public static List<NBTHolder> ITEM_RULES = new ArrayList<>();
-
+    public static List<ResourceLocation> RESOURCES_NEEDING_LOADING = new ArrayList<>();
     public static List<ItemHolder> ITEMS = new ArrayList<>();
 
     public static void loadProperty(Path path) {
@@ -64,13 +62,13 @@ public class FileLoader {
                     rules.add(setNbtCondition("", nbt));
                 }
                 if (key.startsWith("texture.")) {
-                    String newKey = addKey(key, "texture.");
+                    String newKey = addKey(key, "texture.", ":items/");
                     if (newKey != null) {
                         textures.put(newKey, properties.getProperty(key));
                     }
                 }
                 if (key.startsWith("model.")) {
-                    String newKey = addKey(key, "model.");
+                    String newKey = addKey(key, "model.", ":item/");
                     if (newKey != null) {
                         models.put(newKey, properties.getProperty(key));
                     }
@@ -84,13 +82,22 @@ public class FileLoader {
                     ItemHolder.ItemType itemType;
                     if (texture != null) itemType = new ItemHolder.Texture(texture);
                     else if (model != null) itemType = new ItemHolder.Model(model);
-                    else if (!textures.isEmpty()) itemType = new ItemHolder.MultiTexture(textures);
-                    else if (!models.isEmpty()) itemType = new ItemHolder.MultiModel(models);
+                    else if (!textures.isEmpty() || !models.isEmpty()) itemType = new ItemHolder.Multi(textures, models);
                     else {
                         CITNBT.LOGGER.error("File {} is missing a texture or model", path);
                         return;
                     }
-                    ITEMS.add(new ItemHolder(iList, rules, condition, itemType, fileWeight));
+                    if (texture != null)
+                        RESOURCES_NEEDING_LOADING.add(new ResourceLocation(texture));
+                    if (!textures.isEmpty()) {
+                        List<ResourceLocation> list = new ArrayList<>();
+                        for (String s : textures.values()) {
+                            ResourceLocation location = new ResourceLocation(s);
+                            list.add(location);
+                        }
+                        RESOURCES_NEEDING_LOADING.addAll(list);
+                    }
+                    ITEMS.add(new ItemHolder(iList, rules, condition, itemType, fileWeight, path.getFileName().toString()));
                 }
                 case "enchantment" -> {
                     String blend = properties.getProperty("blend", "add");
@@ -110,7 +117,7 @@ public class FileLoader {
         }
     }
 
-    private static String addKey(String key, String prefix) {
+    private static String addKey(String key, String prefix, String inner) {
         String subkey = key.substring(prefix.length());
         String[] split = subkey.split("\\.");
         String namespace;
@@ -125,7 +132,7 @@ public class FileLoader {
             CITNBT.LOGGER.error("Invalid key, should follow {}[<namespace>.]<stage>: {}", prefix, subkey);
             return null;
         }
-        return namespace + ":items/" + item;
+        return namespace + inner + item;
     }
 
     private static NBTCondition setNbtCondition(String nbtPath, String value) {
@@ -159,6 +166,7 @@ public class FileLoader {
         return new NBTCondition(nbtPath, NBTCondition.Type.EQUALS, value);
     }
 
+    @SuppressWarnings("SameParameterValue")
     private static int tryParseInt(String value, int defaultValue) {
         try {
             return Integer.parseInt(value);

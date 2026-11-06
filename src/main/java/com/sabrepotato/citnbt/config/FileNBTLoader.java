@@ -5,22 +5,16 @@ import com.sabrepotato.citnbt.CITNBT;
 import com.sabrepotato.citnbt.parser.FileLoader;
 import com.sabrepotato.citnbt.resources.conditions.ItemstackCondition;
 import com.sabrepotato.citnbt.resources.conditions.NBTCondition;
-import com.sabrepotato.citnbt.resources.ItemRule;
 import com.sabrepotato.citnbt.resources.conditions.RangeSet;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.block.model.ModelResourceLocation;
-import net.minecraft.util.ResourceLocation;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class FileNBTLoader {
-
-    public static List<NBTHolder> ITEM_RULES = new ArrayList<>();
 
     public static void loadFiles() {
         loadFiles("resources");
@@ -35,7 +29,7 @@ public class FileNBTLoader {
             try (Stream<Path> stream = Files.walk(citResource)) {
                 stream.filter(Files::isRegularFile)
                         .filter(path -> path.toString().endsWith(".properties"))
-                        .forEach(path1 -> {loadProperty(path1); FileLoader.loadProperty(path1);})
+                        .forEach(FileLoader::loadProperty)
                 ;
             } catch (Exception e) {
 
@@ -44,7 +38,6 @@ public class FileNBTLoader {
                 stream.filter(Files::isRegularFile)
                         .forEach(path -> {
                             if (path.toString().endsWith(".cit.properties")) {
-                                loadProperty(path);
                                 FileLoader.loadProperty(path);
                             }
                 });
@@ -53,17 +46,16 @@ public class FileNBTLoader {
             }
 
         }
-        Collections.sort(ITEM_RULES);
     }
 
     private static void loadProperty(Path path) {
         try (InputStream inputStream = Files.newInputStream(path)) {
             Properties properties = new Properties();
             properties.load(inputStream);
-            String method = properties.getProperty("method", "average");
-            String cap = properties.getProperty("cap");
-            String fade = properties.getProperty("fade", "0.5");
-            String useGlint = properties.getProperty("useGlint", "true");
+            String method = properties.getProperty("method", "average"); // TODO
+            String cap = properties.getProperty("cap"); // TODO
+            String fade = properties.getProperty("fade", "0.5"); // TODO
+            String useGlint = properties.getProperty("useGlint", "true"); // TODO
             String type = properties.getProperty("type", "item");
             String items = properties.getProperty("items");
             List<String> itemList = Arrays.asList(properties.getProperty("items").split(" "));
@@ -125,24 +117,6 @@ public class FileNBTLoader {
                 }
             }
             if (type.equals("item")) {
-                if (items.isEmpty() || (texture == null && textures.isEmpty() && model == null)) return;
-                List<ModelResourceLocation> itemLocs = itemList
-                        .stream()
-                        .map(item -> new ModelResourceLocation(item, "inventory"))
-                        .collect(Collectors.toList());
-                ResourceLocation modelLoc = (model != null) ? new ResourceLocation(model) : null;
-                if (textures.isEmpty()) {
-                    ResourceLocation textureLoc = (texture != null) ? new ResourceLocation(texture) : null;
-                    itemLocs.forEach(itemLoc -> {
-                        ItemRule rule = new ItemRule(rules, itemLoc, itemstack);
-                        ITEM_RULES.add(new NBTHolder(textureLoc, modelLoc, rule, path.getFileName().toString(), fileWeight));
-                    });
-                } else {
-                    itemLocs.forEach(itemLoc -> {
-                        ItemRule rule = new ItemRule(rules, itemLoc, itemstack);
-                        ITEM_RULES.add(new NBTHolder(textures, modelLoc, rule, path.getFileName().toString(), fileWeight));
-                    });
-                }
             } else if (type.equals("enchantment")) {
                 String blend = properties.getProperty("blend", "add");
                 String speed = properties.getProperty("speed", "1");
@@ -213,10 +187,6 @@ public class FileNBTLoader {
             return new NBTCondition(nbtPath, NBTCondition.Type.RAW, value.substring(4));
         }
         return new NBTCondition(nbtPath, NBTCondition.Type.EQUALS, value);
-    }
-
-    public static void clearRules() {
-        ITEM_RULES.clear();
     }
 
     private static int tryParseInt(String value, int defaultValue) {
