@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 public class FileLoader {
 
     public static List<ResourceLocation> RESOURCES_NEEDING_LOADING = new ArrayList<>();
+    public static List<ResourceLocation> MODELS_NEEDING_LOADING = new ArrayList<>();
     public static List<ItemHolder> ITEMS = new ArrayList<>();
 
     public static void loadProperty(Path path) {
@@ -80,22 +81,32 @@ public class FileLoader {
                     if (itemList.isEmpty()) return;
                     List<ResourceLocation> iList = itemList.stream().map(ResourceLocation::new).collect(Collectors.toList());
                     ItemHolder.ItemType itemType;
-                    if (texture != null) itemType = new ItemHolder.Texture(texture);
-                    else if (model != null) itemType = new ItemHolder.Model(model);
-                    else if (!textures.isEmpty() || !models.isEmpty()) itemType = new ItemHolder.Multi(textures, models);
+                    if (texture != null) {
+                        itemType = new ItemHolder.Texture(texture);
+                        RESOURCES_NEEDING_LOADING.add(new ResourceLocation(texture));
+                    }
+                    else if (model != null) {
+                        itemType = new ItemHolder.Model(model);
+                        MODELS_NEEDING_LOADING.add(new ResourceLocation(model));
+                    }
+                    else if (!textures.isEmpty() || !models.isEmpty()) {
+                        itemType = new ItemHolder.Multi(textures, models);
+                        if (!textures.isEmpty()) {
+                            for (String s : textures.values()) {
+                                ResourceLocation location = new ResourceLocation(s);
+                                RESOURCES_NEEDING_LOADING.add(location);
+                            }
+                        }
+                        if (!models.isEmpty()) {
+                            for (String s : models.values()) {
+                                ResourceLocation location = new ResourceLocation(s);
+                                MODELS_NEEDING_LOADING.add(location);
+                            }
+                        }
+                    }
                     else {
                         CITNBT.LOGGER.error("File {} is missing a texture or model", path);
                         return;
-                    }
-                    if (texture != null)
-                        RESOURCES_NEEDING_LOADING.add(new ResourceLocation(texture));
-                    if (!textures.isEmpty()) {
-                        List<ResourceLocation> list = new ArrayList<>();
-                        for (String s : textures.values()) {
-                            ResourceLocation location = new ResourceLocation(s);
-                            list.add(location);
-                        }
-                        RESOURCES_NEEDING_LOADING.addAll(list);
                     }
                     ITEMS.add(new ItemHolder(iList, rules, condition, itemType, fileWeight, path.getFileName().toString()));
                 }

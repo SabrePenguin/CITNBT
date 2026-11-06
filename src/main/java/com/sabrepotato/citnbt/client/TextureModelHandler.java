@@ -54,6 +54,16 @@ public class TextureModelHandler {
         for(ResourceLocation location: FileLoader.RESOURCES_NEEDING_LOADING) {
             event.getMap().registerSprite(location);
         }
+        for (ResourceLocation location: FileLoader.MODELS_NEEDING_LOADING) {
+            try {
+                IModel model = ModelLoaderRegistry.getModel(location);
+                for (ResourceLocation textures: model.getTextures()) {
+                    event.getMap().registerSprite(textures);
+                }
+            } catch (Exception e) {
+                CITNBT.LOGGER.error("Unabled to find model: {}", location);
+            }
+        }
     }
 
     @SubscribeEvent
