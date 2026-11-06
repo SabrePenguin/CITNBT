@@ -3,6 +3,7 @@ package com.sabrepotato.citnbt.resources;
 import com.sabrepotato.citnbt.CITNBT;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.IResourcePack;
+import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 
 import java.io.File;
@@ -14,7 +15,6 @@ import java.util.List;
 public class ExternalResourcePack {
     private static final File RESOURCE_DIR = new File(Minecraft.getMinecraft().gameDir, "resources");
     private static final File PACK_META = new File(RESOURCE_DIR, "pack.mcmeta");
-//    public static final FakeResourcePack MODEL_PACK = new FakeResourcePack();
 
     @SuppressWarnings("ReadWriteStringCanBeUsed")
     public static void ensurePackMcmetaExists() {
@@ -32,6 +32,10 @@ public class ExternalResourcePack {
 
     @SuppressWarnings("deprecation")
     public static void injectExternalResources() {
+        if (Loader.isModLoaded("resourceloader")) {
+            CITNBT.LOGGER.debug("ResourceLoader detected");
+            return;
+        }
         File resourceDir = new File(Minecraft.getMinecraft().gameDir, "resources");
         IResourcePack flatPack = new FlattenedResourcePack(resourceDir);
 
