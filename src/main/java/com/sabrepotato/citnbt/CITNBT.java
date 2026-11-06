@@ -1,6 +1,6 @@
 package com.sabrepotato.citnbt;
 
-import com.sabrepotato.citnbt.proxy.CommonProxy;
+import com.sabrepotato.citnbt.proxy.IProxy;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
@@ -16,15 +16,10 @@ public class CITNBT {
     @SidedProxy(
             modId = Tags.MODID,
             clientSide = "com.sabrepotato.citnbt.proxy.ClientProxy",
-            serverSide = "com.sabrepotato.citnbt.proxy.CommonProxy"
+            serverSide = "com.sabrepotato.citnbt.proxy.ServerProxy"
     )
-    public static CommonProxy proxy;
+    public static IProxy proxy;
 
-    /**
-     * <a href="https://cleanroommc.com/wiki/forge-mod-development/event#overview">
-     *     Take a look at how many FMLStateEvents you can listen to via the @Mod.EventHandler annotation here
-     * </a>
-     */
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
         proxy.preInit(event);
@@ -32,6 +27,5 @@ public class CITNBT {
 
     @Mod.EventHandler
     public void init(FMLInitializationEvent event) {
-        proxy.init(event);
     }
 }
