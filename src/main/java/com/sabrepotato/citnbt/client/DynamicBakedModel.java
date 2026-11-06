@@ -1,6 +1,5 @@
 package com.sabrepotato.citnbt.client;
 
-import com.sabrepotato.citnbt.CITNBT;
 import com.sabrepotato.citnbt.resources.ItemRule;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.renderer.block.model.*;
