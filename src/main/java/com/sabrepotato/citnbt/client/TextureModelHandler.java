@@ -199,6 +199,8 @@ public class TextureModelHandler {
             bakeTexture(item, mrl);
         } else if (t instanceof ItemHolder.Model) {
             bakeModel(item, mrl);
+        } else if (t instanceof ItemHolder.Multi) {
+            bakeMultiStage(item, mrl);
         }
     }
 
@@ -230,6 +232,67 @@ public class TextureModelHandler {
                 RULES_BY_MODEL.computeIfAbsent(mrl, k -> new ArrayList<>()).add(rule);
             } catch (Exception e) {
                 CITNBT.LOGGER.error("Unable to locate model {}", modelHolder.model());
+                CITNBT.LOGGER.error("{}", e.getLocalizedMessage());
+            }
+        }
+    }
+
+    @SuppressWarnings("SimplifyOptionalCallChains")
+    private static void bakeMultiStage(ItemHolder item, ModelResourceLocation mrl) {
+        if (item.itemType() instanceof ItemHolder.Multi multi) {
+            try {
+                IModel iModel = ModelLoaderRegistry.getModel(mrl);
+                Optional<ModelBlock> modelBlock = iModel.asVanillaModel();
+                if (!modelBlock.isPresent())
+                    return;
+                List<ItemOverride> list = modelBlock.get().getOverrides();
+                for(int i = list.size()-1; i >= 0; i--) {
+                    ItemOverride override = list.get(i);
+                    String textureLocation = override.getLocation().toString().replaceAll("^(.*:)?item(?=/)", "$1items");
+                    String modelLocation = override.getLocation().toString();
+                    boolean isModel = multi.models().containsKey(modelLocation);
+                    if (!multi.textures().containsKey(textureLocation) && !isModel) {
+                        continue;
+                    }
+                    IModel overloadModel;
+                    if (isModel) {
+                        overloadModel = ModelLoaderRegistry.getModel(new ResourceLocation(multi.models().get(modelLocation)));
+                    } else {
+                        overloadModel = ModelLoaderRegistry.getModel(override.getLocation())
+                                .retexture(ImmutableMap.of("layer0", multi.textures().get(textureLocation)));
+                    }
+                    ItemRule rule = new ItemRule(item.nbtConditions(), mrl, item.itemstackCondition(), new Condition(override));
+                    IBakedModel bakedModel = overloadModel.bake(overloadModel.getDefaultState(), DefaultVertexFormats.ITEM,
+                            loc ->  Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(loc.toString()));
+                    BAKED_MODELS.put(rule, bakedModel);
+                    RULES_BY_MODEL.computeIfAbsent(mrl, k -> new ArrayList<>()).add(rule);
+                }
+                Map<String, String> textures = modelBlock.get().textures;
+                IModel model = null;
+                for(Map.Entry<String, String> e : textures.entrySet()) {
+                    String texture = e.getValue();
+                    if (!texture.contains(":")) {
+                        texture = "minecraft:" + texture;
+                    }
+                    String modelTexture = texture.replaceAll("^(.*:)?items(?=/)", "$1item");
+                    if (multi.models().containsKey(modelTexture)) {
+                        model = ModelLoaderRegistry.getModel(new ResourceLocation(multi.models().get(modelTexture)));
+                    } else if (multi.textures().containsKey(texture)) {
+                        if (model == null)
+                            model = ModelLoaderRegistry.getModel(mrl);
+                        model = model.retexture(ImmutableMap.of(e.getKey(), multi.textures().get(texture)));
+                    }
+                }
+                if (model == null)
+                    return;
+
+                IBakedModel bakedModel = model.bake(model.getDefaultState(), DefaultVertexFormats.ITEM,
+                        location -> Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(location.toString()));
+                ItemRule rule = new ItemRule(item.nbtConditions(), mrl, item.itemstackCondition());
+                BAKED_MODELS.put(rule, bakedModel);
+                RULES_BY_MODEL.computeIfAbsent(mrl, k -> new ArrayList<>()).add(rule);
+            } catch (Exception e) {
+                CITNBT.LOGGER.error("Unable to locate model {}", mrl);
                 CITNBT.LOGGER.error("{}", e.getLocalizedMessage());
             }
         }
@@ -270,11 +333,5 @@ public class TextureModelHandler {
             CITNBT.LOGGER.error("Unable to execute getVariantNames from ModelLoader");
         }
         return EMPTY_LIST;
-    }
-
-    private static ResourceLocation getItemLocation(String location)
-    {
-        ResourceLocation resourcelocation = new ResourceLocation(location.replaceAll("#.*", ""));
-        return new ResourceLocation(resourcelocation.getNamespace(), "item/" + resourcelocation.getPath());
     }
 }
