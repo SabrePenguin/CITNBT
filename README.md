@@ -42,12 +42,17 @@ a serious bug occurs, you can use the same `.properties` file in any version.
   - Raw: `nbt.ench=raw:[{lvl:1s,id:2s}]`
 - Item Stack conditions
   - Stack Size: `stackSize=1` or `stackSize=range:1-17 32`
+  - Metadata or damage
+  - Damage mask
+  - Current hand: `hand=any`, `hand=off`, or `hand=main`
+  - Enchantments
+  - Enchantment levels
 - Bow/Override handling
   - texture: `texture.bow_pulling=<texture_name>`
     - texture follows `texture[.<namespace>].<stage>` key
   - model: `model.bow_pulling=<texture_name>`
     - model follows `model[.<namespace>].<stage>` key
-- Basic model support (not fully tested)
+- Basic model support
 - mcmeta animation support
 - Hot reload
 - Multi item support `items=minecraft:paper minecraft:stick`
