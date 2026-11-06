@@ -45,7 +45,21 @@ public class RangeSet {
         boundaries.add(index, lower);
     }
 
-    public int binarySearch(int key) {
+    protected int binarySearch(double key) {
+        int midVal;
+        int to = boundaries.size() - 1;
+        int from = 0;
+        while (from <= to) {
+            final int mid = (from + to) >>> 1;
+            midVal = boundaries.getInt(mid);
+            if (midVal < key) from = mid + 1;
+            else if (midVal > key) to = mid - 1;
+            else return mid;
+        }
+        return -(from + 1);
+    }
+
+    protected int binarySearch(int key) {
         int midVal;
         int to = boundaries.size() - 1;
         int from = 0;
@@ -69,15 +83,18 @@ public class RangeSet {
     }
 
     public boolean contains(long value) {
-        return false;
-    }
-
-    public boolean contains(float value) {
-        return false;
+        if (value > Integer.MAX_VALUE || value < Integer.MIN_VALUE)
+            return false;
+        return contains((int) value);
     }
 
     public boolean contains(double value) {
-        return false;
+        int index = binarySearch(value);
+        if (index >= 0) {
+            return (index % 2 == 0);
+        }
+        int trueIndex = ((-index) - 1);
+        return (trueIndex % 2 != 0);
     }
 
     @Override
